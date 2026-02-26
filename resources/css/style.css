@@ -29,3 +29,19 @@ body {
     color: #f5d76e;
 }
 
+.header-search {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.header-search input {
+    width: 320px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #e5e5e5;
+    font-size: 14px;
+}
+
+

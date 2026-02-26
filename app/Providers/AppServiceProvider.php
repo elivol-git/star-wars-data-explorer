@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Llm\Clients\HuggingFaceClient;
+use App\Services\Llm\Clients\LlmClientInterface;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -11,9 +13,9 @@ class AppServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function register()
+    public function register(): void
     {
-        //
+        $this->app->bind(LlmClientInterface::class, HuggingFaceClient::class);
     }
 
     /**

@@ -31,4 +31,11 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'huggingface' => [
+        'token' => env('HF_TOKEN'),
+        'base_url' => env('HF_BASE_URL'),
+        'model' => env('HF_MODEL'),
+    ],
+
+
 ];
