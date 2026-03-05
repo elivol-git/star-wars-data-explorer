@@ -61,4 +61,9 @@ class Species extends Model
     {
         return $this->belongsToMany(Person::class, PivotTables::PERSON_SPECIES, 'species_id');
     }
+
+    public function searchableColumns(): array
+    {
+        return ['name'];
+    }
 }

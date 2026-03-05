@@ -36,6 +36,10 @@ class Film extends Model
         return $this->belongsToMany(Planet::class, PivotTables::FILM_PLANET);
     }
 
+    public function people(): BelongsToMany
+    {
+        return $this->belongsToMany(Person::class, PivotTables::FILM_PERSON);
+    }
     public function vehicles(): BelongsToMany
     {
         return $this->belongsToMany(Vehicle::class, PivotTables::FILM_VEHICLE);
@@ -58,5 +62,10 @@ class Film extends Model
                 ? \Carbon\Carbon::parse($value)->toDateString()
                 : null
         );
+    }
+
+    public function searchableColumns(): array
+    {
+        return ['title', 'opening_crawl', 'director', 'producer'];
     }
 }

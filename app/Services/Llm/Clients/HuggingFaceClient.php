@@ -3,6 +3,7 @@
 namespace App\Services\Llm\Clients;
 
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class HuggingFaceClient implements LlmClientInterface
 {
@@ -24,7 +25,7 @@ class HuggingFaceClient implements LlmClientInterface
             "messages" => $messages,
             "temperature" => 0.2,
         ], $options);
-
+Log::debug($this->baseUrl.PHP_EOL. json_encode($payload).PHP_EOL);
         $res = Http::withToken($this->token)
             ->post($this->baseUrl, $payload);
 

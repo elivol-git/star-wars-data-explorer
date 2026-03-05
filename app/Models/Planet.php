@@ -55,7 +55,25 @@ class Planet extends Model
 
     public function people(): BelongsToMany
     {
-        return $this->belongsToMany(Person::class, PivotTables::PLANET_PERSON);
+        return $this->belongsToMany(Person::class, PivotTables::PLANET_PERSON,'planet_id','person_id');
     }
 
+    public function searchableRelations(): array
+    {
+        return [
+            'films',
+            'films.starships',
+            'films.vehicles',
+            'films.species',
+            'people',
+            'people.starships',
+            'people.vehicles',
+            'people.species',
+        ];
+    }
+
+    public function searchableColumns(): array
+    {
+        return ['name', 'climate', 'terrain', 'gravity'];
+    }
 }

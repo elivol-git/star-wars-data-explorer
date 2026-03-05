@@ -51,6 +51,15 @@ class Person extends Model
         return $this->belongsTo(Planet::class, 'homeworld_id');
     }
 
+    public function planets(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            Planet::class,
+            PivotTables::PLANET_PERSON,
+            'person_id',
+            'planet_id'
+        );
+    }
     public function films(): BelongsToMany
     {
         return $this->belongsToMany(Film::class, PivotTables::FILM_PERSON);
@@ -69,5 +78,10 @@ class Person extends Model
     public function starships(): BelongsToMany
     {
         return $this->belongsToMany(Starship::class, PivotTables::PERSON_STARSHIP);
+    }
+
+    public function searchableColumns(): array
+    {
+        return ['name'];
     }
 }

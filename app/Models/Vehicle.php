@@ -58,4 +58,9 @@ class Vehicle extends Model
     {
         return $this->belongsToMany(Person::class, PivotTables::PERSON_VEHICLE, 'vehicle_id', 'person_id');
     }
+
+    public function searchableColumns(): array
+    {
+        return ['name'];
+    }
 }
