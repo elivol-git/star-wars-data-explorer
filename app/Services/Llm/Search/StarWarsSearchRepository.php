@@ -8,84 +8,78 @@ use Illuminate\Support\Facades\Log;
 
 class StarWarsSearchRepository
 {
-    /*
-    |--------------------------------------------------------------------------
-    | ENTITY CONFIGURATION
-    |--------------------------------------------------------------------------
-    */
 
     protected array $entities = [
 
         'planets' => [
             'model' => \App\Models\Planet::class,
-            'keywords' => ['name', 'climate', 'terrain', 'gravity'],
+            'keywords' => ['name','climate','terrain','gravity'],
             'with' => [
                 'films',
-                'people',
                 'films.vehicles',
                 'films.starships',
                 'films.species',
-            ],
+
+                'people',
+                'people.species',
+                'people.starships',
+                'people.vehicles',
+                'people.homeworld'
+            ]
         ],
 
         'films' => [
             'model' => \App\Models\Film::class,
-            'keywords' => ['title', 'director', 'producer'],
+            'keywords' => ['title','director','producer'],
             'with' => [
                 'planets',
                 'people',
                 'species',
                 'starships',
-                'vehicles',
-            ],
+                'vehicles'
+            ]
         ],
 
         'people' => [
             'model' => \App\Models\Person::class,
-            'keywords' => ['name', 'gender', 'birth_year'],
+            'keywords' => ['name','gender','birth_year'],
             'with' => [
                 'films',
                 'species',
                 'starships',
                 'vehicles',
-                'homeworld',
-            ],
+                'homeworld'
+            ]
         ],
 
         'species' => [
             'model' => \App\Models\Species::class,
-            'keywords' => ['name', 'classification', 'language'],
+            'keywords' => ['name','classification','language'],
             'with' => [
                 'films',
                 'people',
-                'homeworld',
-            ],
+                'homeworld'
+            ]
         ],
 
         'starships' => [
             'model' => \App\Models\Starship::class,
-            'keywords' => ['name', 'model', 'manufacturer', 'starship_class'],
+            'keywords' => ['name','model','manufacturer','starship_class'],
             'with' => [
                 'films',
-                'pilots',
-            ],
+                'pilots'
+            ]
         ],
 
         'vehicles' => [
             'model' => \App\Models\Vehicle::class,
-            'keywords' => ['name', 'model', 'manufacturer', 'vehicle_class'],
+            'keywords' => ['name','model','manufacturer','vehicle_class'],
             'with' => [
                 'films',
-                'pilots',
-            ],
+                'pilots'
+            ]
         ],
     ];
-
-    /*
-    |--------------------------------------------------------------------------
-    | PUBLIC ENTRY
-    |--------------------------------------------------------------------------
-    */
 
     public function search(
         string $entity,
@@ -94,77 +88,120 @@ class StarWarsSearchRepository
         array $relations = []
     ): Collection {
 
-        $config = $this->getEntityConfig($entity);
+        $config = $this->entities[$entity];
         $modelClass = $config['model'];
 
-        /** @var Builder $query */
+        $relations = $this->normalizeRelations($relations);
+
         $query = $modelClass::query();
 
-        $this->logInput($entity, $keywords, $filters, $relations);
+        Log::debug("Entity: $entity");
+        Log::debug("Keywords: ".json_encode($keywords));
+        Log::debug("Filters: ".json_encode($filters));
+        Log::debug("Relations: ".json_encode($relations));
 
-        $relationApplied = $this->applyRelationFilters($query, $modelClass, $relations);
+        $relationApplied = $this->applyRelationFilters($query,$relations);
 
-        if (!$relationApplied) {
-            $this->applyKeywordSearch($query, $config, $keywords);
+        if(!$relationApplied){
+            $this->applyKeywordSearch($query,$config,$keywords);
         }
 
-        $this->applyDirectFilters($query, $filters);
+        $this->applyDirectFilters($query,$filters);
 
-        $this->applyEagerLoading($query, $config, $relations);
+        $query->with($config['with']);
 
-        Log::debug("query: " . $query->toSql());
+        Log::debug("query: ".$query->toSql());
         Log::debug($query->getBindings());
 
         return $query->limit(20)->get();
     }
 
-    /*
-    |--------------------------------------------------------------------------
-    | SMALL RESPONSIBILITY METHODS
-    |--------------------------------------------------------------------------
-    */
-
-    protected function getEntityConfig(string $entity): array
+    protected function normalizeRelations(array $relations): array
     {
-        if (!isset($this->entities[$entity])) {
-            throw new \InvalidArgumentException("Unsupported entity [$entity]");
+        foreach ($relations as &$relation) {
+
+            if (!is_array($relation)) continue;
+
+            foreach ($relation as $type => $value) {
+
+                if (!isset($value['name'])) continue;
+
+                $name = $value['name'];
+
+                if ($type === 'craft') {
+
+                    if (\App\Models\Starship::where('name','like',"%$name%")->exists()) {
+                        $relation['starships'] = ['name'=>$name];
+                    }
+                    elseif (\App\Models\Vehicle::where('name','like',"%$name%")->exists()) {
+                        $relation['vehicles'] = ['name'=>$name];
+                    }elseif (\App\Models\Species::where('name','like',"%$name%")->exists()) {
+                        $relation['species'] = ['name'=>$name];
+                    }
+
+                    unset($relation['craft']);
+                }
+
+                if ($type === 'character') {
+
+                    if (\App\Models\Person::where('name','like',"%$name%")->exists()) {
+                        $relation['people'] = ['name'=>$name];
+                    }
+                    elseif (\App\Models\Species::where('name','like',"%$name%")->exists()) {
+                        $relation['species'] = ['name'=>$name];
+                    }
+
+                    unset($relation['character']);
+                }
+
+            }
         }
 
-        return $this->entities[$entity];
-    }
-
-    protected function logInput(string $entity, array $keywords, array $filters, array $relations): void
-    {
-        Log::debug("Entity: $entity");
-        Log::debug("Keywords: " . json_encode($keywords));
-        Log::debug("Filters: " . json_encode($filters));
-        Log::debug("Relations: " . json_encode($relations));
+        return $relations;
     }
 
     protected function applyRelationFilters(
         Builder $query,
-        string $modelClass,
         array $relations
     ): bool {
 
-        $relationApplied = false;
+        $applied = false;
 
-        foreach ($relations as $relationName => $relationFilters) {
+        foreach ($relations as $relation => $filters) {
 
-            if (!method_exists($modelClass, $relationName)) {
-                continue;
-            }
+            $this->applyNestedRelation($query,$relation,$filters);
 
-            $relationApplied = true;
-
-            $query->whereHas($relationName, function (Builder $q) use ($relationFilters) {
-                foreach ($relationFilters as $column => $value) {
-                    $q->where($column, 'like', "%$value%");
-                }
-            });
+            $applied = true;
         }
 
-        return $relationApplied;
+        return $applied;
+    }
+
+    protected function applyNestedRelation(
+        Builder $query,
+        string $relationPath,
+        array $filters
+    ): void {
+
+        foreach ($filters as $key => $value) {
+
+            if (is_array($value)) {
+
+                $this->applyNestedRelation(
+                    $query,
+                    $relationPath.'.'.$key,
+                    $value
+                );
+
+                return;
+            }
+
+            $query->whereHas($relationPath,function($q) use ($key,$value){
+
+                $q->where($key,'like',"%$value%");
+
+            });
+        }
     }
 
     protected function applyKeywordSearch(
@@ -175,32 +212,26 @@ class StarWarsSearchRepository
 
         foreach ($keywords as $word) {
 
-            $query->where(function (Builder $q) use ($config, $word) {
+            $query->where(function ($q) use ($config,$word){
 
-                // Own columns
                 foreach ($config['keywords'] as $column) {
-                    $q->orWhere($column, 'like', "%$word%");
+                    $q->orWhere($column,'like',"%$word%");
                 }
 
-                // Related models (filter only, do NOT constrain eager loading)
                 foreach ($config['with'] as $relation) {
 
-                    // Only allow valid relations for whereHas
-                    if (!str_contains($relation, '.')) {
-                        $q->orWhereHas($relation, function (Builder $rq) use ($word) {
-                            $rq->where('name', 'like', "%$word%");
-                        });
-                    }
+                    $q->orWhereHas($relation,function($rq) use ($word){
 
-                    // Support nested like films.vehicles
-                    if (str_contains($relation, '.')) {
-                        $q->orWhereHas($relation, function (Builder $rq) use ($word) {
-                            $rq->where('name', 'like', "%$word%");
-                        });
-                    }
+                        $rq->where('name','like',"%$word%");
+
+                    });
+
                 }
+
             });
+
         }
+
     }
 
     protected function applyDirectFilters(
@@ -208,11 +239,9 @@ class StarWarsSearchRepository
         array $filters
     ): void {
 
-        Log::debug("Filters: " . print_r($filters, true));
+        foreach ($filters as $column=>$value){
 
-        foreach ($filters as $column => $value) {
-
-            if (is_array($value) && isset($value['operator'], $value['value'])) {
+            if(is_array($value) && isset($value['operator'])){
 
                 $query->where(
                     $column,
@@ -221,22 +250,9 @@ class StarWarsSearchRepository
                 );
 
             } else {
-                $query->where($column, 'like', "%$value%");
+
+                $query->where($column,'like',"%$value%");
             }
         }
-    }
-
-    protected function applyEagerLoading(
-        Builder $query,
-        array $config,
-        array $relations
-    ): void {
-
-        $with = array_unique(array_merge(
-            $config['with'],
-            array_keys($relations)
-        ));
-
-        $query->with($with);
     }
 }

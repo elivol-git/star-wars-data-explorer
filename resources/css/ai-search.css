@@ -221,6 +221,14 @@
     grid-template-columns: repeat(2, 1fr);
     gap: 24px;
 }
+.highlight {
+    color: #ffd700;
+    font-weight: 700;
+}
+.match-entity {
+    font-weight: 700;
+    color: #7ec8ff;
+}
 
 @media (max-width: 900px) {
     .grid {
