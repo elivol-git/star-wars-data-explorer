@@ -26,6 +26,7 @@ return new class extends Migration
                 $table->timestamp('edited')->nullable();
                 $table->string('url')->unique();
                 $table->foreignId('homeworld_id')->nullable()->constrained('planets');
+                $table->index('name', 'idx_name_people');
             });
         }
 
@@ -46,6 +47,7 @@ return new class extends Migration
                 $table->timestamp('edited')->nullable();
                 $table->string('url')->unique();
                 $table->foreignId('homeworld_id')->nullable()->index()->constrained('planets');
+                $table->index('name', 'idx_name_species');
             });
         }
 
@@ -66,6 +68,7 @@ return new class extends Migration
                 $table->timestamp('created')->nullable();
                 $table->timestamp('edited')->nullable();
                 $table->string('url')->unique();
+                $table->index('name', 'idx_vehicle_name');
             });
         }
 
@@ -88,6 +91,7 @@ return new class extends Migration
                 $table->timestamp('created')->nullable();
                 $table->timestamp('edited')->nullable();
                 $table->string('url')->unique();
+                $table->index('name', 'idx_starship_name');
             });
         }
 

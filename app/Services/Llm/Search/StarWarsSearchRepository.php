@@ -13,8 +13,15 @@ class StarWarsSearchRepository
 
         'planets' => [
             'model' => \App\Models\Planet::class,
+
             'keywords' => ['name','climate','terrain','gravity'],
-            'with' => [
+
+            'search_with' => [
+                'films:id,title',
+                'people:id,name'
+            ],
+
+            'popup_with' => [
                 'films',
                 'films.vehicles',
                 'films.starships',
@@ -30,8 +37,15 @@ class StarWarsSearchRepository
 
         'films' => [
             'model' => \App\Models\Film::class,
+
             'keywords' => ['title','director','producer'],
-            'with' => [
+
+            'search_with' => [
+                'planets:id,name',
+                'people:id,name'
+            ],
+
+            'popup_with' => [
                 'planets',
                 'people',
                 'species',
@@ -42,8 +56,14 @@ class StarWarsSearchRepository
 
         'people' => [
             'model' => \App\Models\Person::class,
+
             'keywords' => ['name','gender','birth_year'],
-            'with' => [
+
+            'search_with' => [
+                'films:id,title'
+            ],
+
+            'popup_with' => [
                 'films',
                 'species',
                 'starships',
@@ -54,8 +74,14 @@ class StarWarsSearchRepository
 
         'species' => [
             'model' => \App\Models\Species::class,
+
             'keywords' => ['name','classification','language'],
-            'with' => [
+
+            'search_with' => [
+                'films:id,title'
+            ],
+
+            'popup_with' => [
                 'films',
                 'people',
                 'homeworld'
@@ -64,8 +90,14 @@ class StarWarsSearchRepository
 
         'starships' => [
             'model' => \App\Models\Starship::class,
+
             'keywords' => ['name','model','manufacturer','starship_class'],
-            'with' => [
+
+            'search_with' => [
+                'films:id,title'
+            ],
+
+            'popup_with' => [
                 'films',
                 'pilots'
             ]
@@ -73,8 +105,14 @@ class StarWarsSearchRepository
 
         'vehicles' => [
             'model' => \App\Models\Vehicle::class,
+
             'keywords' => ['name','model','manufacturer','vehicle_class'],
-            'with' => [
+
+            'search_with' => [
+                'films:id,title'
+            ],
+
+            'popup_with' => [
                 'films',
                 'pilots'
             ]
@@ -108,7 +146,7 @@ class StarWarsSearchRepository
 
         $this->applyDirectFilters($query,$filters);
 
-        $query->with($config['with']);
+        $query->with($config['search_with']);
 
         Log::debug("query: ".$query->toSql());
         Log::debug($query->getBindings());
@@ -254,5 +292,16 @@ class StarWarsSearchRepository
                 $query->where($column,'like',"%$value%");
             }
         }
+    }
+
+    public function loadPopupRelations($entity, $collection): void
+    {
+        $config = $this->entities[$entity];
+
+        if (!$collection->count()) {
+            return;
+        }
+
+        $collection->load($config['popup_with']);
     }
 }

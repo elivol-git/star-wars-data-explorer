@@ -46,6 +46,8 @@ class StarWarsAiSearchService
                         $relations
                     );
 
+                    $this->repo->loadPopupRelations($entity, $data);
+
                     return [
                         "entity" => $entity,
                         "parsed" => $parsed,

@@ -29,6 +29,7 @@ return new class extends Migration
                 $table->timestamp('edited')->nullable();
                 $table->string('url')->unique();
                 $table->timestamps();
+                $table->index('name', 'idx_planets_name');
             });
         }
     }

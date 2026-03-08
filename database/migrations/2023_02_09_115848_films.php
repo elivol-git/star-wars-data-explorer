@@ -27,6 +27,7 @@ return new class extends Migration
                 $table->timestamp('edited')->nullable();
                 $table->string('url')->unique();
                 $table->timestamps();
+                $table->index('title', 'idx_film_title');
             });
         }
     }
