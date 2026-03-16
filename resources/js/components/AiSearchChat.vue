@@ -1,7 +1,6 @@
 <template>
     <div class="ai-results">
 
-        <!-- Results Only -->
         <div v-if="loading" class="text">
             Thinking...
         </div>
@@ -11,56 +10,92 @@
         </div>
 
         <div v-else>
-            <!-- Mixed results -->
+
+            <!-- MIXED RESULTS -->
             <div v-if="entity === 'mixed'">
-                <div v-for="(items, type) in data" :key="type" class="group">
+
+                <div
+                    v-for="(items, type) in data"
+                    :key="type"
+                    class="group"
+                >
+
+                    <h2 class="group-title">
+                        {{ type }}
+                    </h2>
 
                     <div v-if="items.length === 0" class="empty">
                         No results
                     </div>
 
                     <div v-else class="grid">
-                        <PlanetCard
-                            v-if="type === 'planets'"
-                            v-for="p in items"
-                            :key="p.id"
-                            :planet="p"
-                        />
 
-                        <EntityCard
-                            v-else
-                            v-for="x in items"
-                            :key="x.id"
-                            :type="type"
-                            :item="x"
-                        />
+                        <!-- PLANETS -->
+                        <template v-if="type === 'planets'">
+
+                            <PlanetCard
+                                v-for="p in items"
+                                :key="p.id"
+                                :planet="p"
+                                :match="p.match"
+                                :keywords="p.keywords"
+                            />
+
+                        </template>
+
+                        <!-- OTHER ENTITIES -->
+                        <template v-else>
+
+                            <EntityCard
+                                v-for="x in items"
+                                :key="x.id"
+                                :type="type"
+                                :item="x"
+                            />
+
+                        </template>
+
                     </div>
 
                 </div>
+
             </div>
 
-            <!-- Single entity results -->
+
+            <!-- SINGLE ENTITY -->
             <div v-else>
+
                 <div v-if="data?.length === 0" class="empty">
                     No results found
                 </div>
 
                 <div v-else class="grid">
-                    <PlanetCard
-                        v-if="entity === 'planets'"
-                        v-for="p in data"
-                        :key="p.id"
-                        :planet="p"
-                    />
 
-                    <EntityCard
-                        v-else
-                        v-for="x in data"
-                        :key="x.id"
-                        :type="entity"
-                        :item="x"
-                    />
+                    <template v-if="entity === 'planets'">
+
+                        <PlanetCard
+                            v-for="p in data"
+                            :key="p.id"
+                            :planet="p"
+                            :match="p.match"
+                            :keywords="p.keywords"
+                        />
+
+                    </template>
+
+                    <template v-else>
+
+                        <EntityCard
+                            v-for="x in data"
+                            :key="x.id"
+                            :type="entity"
+                            :item="x"
+                        />
+
+                    </template>
+
                 </div>
+
             </div>
 
         </div>
@@ -69,6 +104,7 @@
 </template>
 
 <script setup>
+
 import { ref, onMounted } from "vue"
 import PlanetCard from "./PlanetCard.vue"
 import EntityCard from "./entities/EntityCard.vue"
@@ -78,35 +114,46 @@ const data = ref(null)
 const loading = ref(true)
 const error = ref(null)
 
-async function loadResults(q) {
+async function loadResults(q){
+
     loading.value = true
     error.value = null
 
-    try {
+    try{
+
         const res = await fetch(`/api/ai-search?q=${encodeURIComponent(q)}`)
         const json = await res.json()
 
-        if (!res.ok) {
+        if(!res.ok){
             throw new Error(json?.error || "API Error")
         }
 
         entity.value = json.entity
         data.value = json.data
-    } catch (e) {
+
+    }catch(e){
+
         error.value = e.message
-    } finally {
+
+    }finally{
+
         loading.value = false
+
     }
+
 }
 
-onMounted(() => {
+onMounted(()=>{
+
     const params = new URLSearchParams(window.location.search)
     const q = params.get("q")
 
-    if (q) {
+    if(q){
         loadResults(q)
-    } else {
+    }else{
         loading.value = false
     }
+
 })
+
 </script>

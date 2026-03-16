@@ -30,6 +30,7 @@ class StarWarsAiSearchService
                 $match     = $parsed['match'] ?? [];
 
                 Log::info("AI Parsed:", $parsed);
+                Log::info("match:". print_r($match, true));
 
                 /*
                 |--------------------------------------------------------------------------
@@ -47,7 +48,7 @@ class StarWarsAiSearchService
                     );
 
                     $this->repo->loadPopupRelations($entity, $data);
-
+                    Log::info("SEARCH RESULT", $data->toArray());
                     return [
                         "entity" => $entity,
                         "parsed" => $parsed,
@@ -115,7 +116,7 @@ class StarWarsAiSearchService
 
         return $results->map(function ($item) use ($match) {
 
-            $item->match = [];
+            $matchData = [];
 
             /*
             |--------------------------------------------------------------------------
@@ -131,10 +132,10 @@ class StarWarsAiSearchService
 
                         if (stripos($vehicle->name, $match['vehicle']) !== false) {
 
-                            $item->match['vehicle'] = $vehicle;
-                            $item->match['film']    = $film;
+                            $matchData['vehicle'] = $vehicle;
+                            $matchData['film']    = $film;
 
-                            return $item;
+                            break 2;
                         }
                     }
                 }
@@ -154,10 +155,10 @@ class StarWarsAiSearchService
 
                         if (stripos($starship->name, $match['starship']) !== false) {
 
-                            $item->match['starship'] = $starship;
-                            $item->match['film']     = $film;
+                            $matchData['starship'] = $starship;
+                            $matchData['film']     = $film;
 
-                            return $item;
+                            break 2;
                         }
                     }
                 }
@@ -177,10 +178,10 @@ class StarWarsAiSearchService
 
                         if (stripos($species->name, $match['species']) !== false) {
 
-                            $item->match['species'] = $species;
-                            $item->match['film']    = $film;
+                            $matchData['species'] = $species;
+                            $matchData['film']    = $film;
 
-                            return $item;
+                            break 2;
                         }
                     }
                 }
@@ -198,9 +199,8 @@ class StarWarsAiSearchService
 
                     if (stripos($film->title, $match['film']) !== false) {
 
-                        $item->match['film'] = $film;
-
-                        return $item;
+                        $matchData['film'] = $film;
+                        break;
                     }
                 }
             }
@@ -217,9 +217,8 @@ class StarWarsAiSearchService
 
                     if (stripos($person->name, $match['person']) !== false) {
 
-                        $item->match['person'] = $person;
-
-                        return $item;
+                        $matchData['person'] = $person;
+                        break;
                     }
                 }
             }
@@ -231,8 +230,17 @@ class StarWarsAiSearchService
             */
 
             if (!empty($match['property'])) {
+                $matchData['property'] = $match['property'];
+            }
 
-                $item->match['property'] = $match['property'];
+            /*
+            |--------------------------------------------------------------------------
+            | ASSIGN MATCH SAFELY
+            |--------------------------------------------------------------------------
+            */
+
+            if (!empty($matchData)) {
+                $item->setAttribute('match', $matchData);
             }
 
             return $item;

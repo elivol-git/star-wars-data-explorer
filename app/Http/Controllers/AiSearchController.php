@@ -20,7 +20,7 @@ class AiSearchController extends Controller
 
         try {
             $result = $service->search($q);
-
+//            Log::debug("result:". print_r($result, true));
             return response()->json($result);
 
         } catch (\Throwable $e) {

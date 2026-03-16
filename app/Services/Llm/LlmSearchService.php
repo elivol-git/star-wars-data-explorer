@@ -53,25 +53,40 @@ class LlmSearchService
         $decoded = json_decode($matches[0], true);
 
         if (json_last_error() !== JSON_ERROR_NONE) {
+
             Log::warning("Invalid JSON from LLM", [
                 'error' => json_last_error_msg(),
                 'content' => $content
             ]);
+
             return $this->fallback($content);
         }
 
         return [
-            "entity"    => $this->validateEntity(
+            "entity" => $this->validateEntity(
                 strtolower($decoded["entity"] ?? "mixed")
             ),
-            "keywords"  => is_array($decoded["keywords"] ?? null)
+
+            "keywords" => is_array($decoded["keywords"] ?? null)
                 ? $decoded["keywords"]
                 : [],
-            "filters"   => is_array($decoded["filters"] ?? null)
+
+            "filters" => is_array($decoded["filters"] ?? null)
                 ? $decoded["filters"]
                 : [],
+
             "relations" => is_array($decoded["relations"] ?? null)
                 ? $decoded["relations"]
+                : [],
+
+            /*
+            |--------------------------------------------------------------------------
+            | MATCH (IMPORTANT FIX)
+            |--------------------------------------------------------------------------
+            */
+
+            "match" => is_array($decoded["match"] ?? null)
+                ? $decoded["match"]
                 : [],
         ];
     }
@@ -84,6 +99,7 @@ class LlmSearchService
             'people',
             'species',
             'starships',
+            'vehicles',
             'mixed'
         ];
 
@@ -101,6 +117,7 @@ class LlmSearchService
             "keywords"  => $text ? [$text] : [],
             "filters"   => [],
             "relations" => [],
+            "match"     => []
         ];
     }
 

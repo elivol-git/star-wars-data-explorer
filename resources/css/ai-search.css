@@ -229,8 +229,57 @@
     font-weight: 700;
     color: #7ec8ff;
 }
+/* ===========================
+   SEARCH MATCH HIGHLIGHTS
+=========================== */
 
-@media (max-width: 900px) {
+.search-context {
+    border-left: 4px solid #ffd700;
+    background: rgba(255, 215, 0, 0.05);
+}
+
+.context-item {
+    border: 1px solid #333;
+    transition: all .2s ease;
+}
+
+.context-item:hover {
+    border-color: #ffd700;
+}
+
+/* Entity highlight */
+
+.match-entity,
+.context-entity {
+    font-weight: 700;
+    color: #7ec8ff;
+}
+
+/* Property highlight */
+
+.property-highlight {
+    color: #ffd700;
+    font-weight: 700;
+}
+
+/* Card hover for search results */
+
+.planet-card:hover {
+    border-color: #444;
+}
+
+/* Result grouping */
+
+.search-results {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 24px;
+}
+
+@media (max-width:900px) {
+    .search-results {
+        grid-template-columns: 1fr;
+    }
     .grid {
         grid-template-columns: 1fr;
     }
