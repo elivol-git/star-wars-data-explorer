@@ -48,7 +48,7 @@ class StarWarsAiSearchService
                     );
 
                     $this->repo->loadPopupRelations($entity, $data);
-//                    Log::info("SEARCH RESULT", $data->toArray());
+
                     return [
                         "entity" => $entity,
                         "parsed" => $parsed,
@@ -58,7 +58,7 @@ class StarWarsAiSearchService
 
                 /*
                 |--------------------------------------------------------------------------
-                | MIXED SEARCH (fallback)
+                | MIXED SEARCH
                 |--------------------------------------------------------------------------
                 */
 
@@ -66,32 +66,26 @@ class StarWarsAiSearchService
                     "entity" => "mixed",
                     "parsed" => $parsed,
                     "data"   => [
-
                         "planets" => $this->attachMatch(
                             $this->repo->search('planets', $keywords, $filters, $relations),
                             $match
                         ),
-
                         "films" => $this->attachMatch(
                             $this->repo->search('films', $keywords, $filters, $relations),
                             $match
                         ),
-
                         "people" => $this->attachMatch(
                             $this->repo->search('people', $keywords, $filters, $relations),
                             $match
                         ),
-
                         "species" => $this->attachMatch(
                             $this->repo->search('species', $keywords, $filters, $relations),
                             $match
                         ),
-
                         "starships" => $this->attachMatch(
                             $this->repo->search('starships', $keywords, $filters, $relations),
                             $match
                         ),
-
                         "vehicles" => $this->attachMatch(
                             $this->repo->search('vehicles', $keywords, $filters, $relations),
                             $match
@@ -104,7 +98,7 @@ class StarWarsAiSearchService
 
     /*
     |--------------------------------------------------------------------------
-    | ATTACH MATCH CONTEXT TO RESULTS
+    | ATTACH MATCH CONTEXT (FIXED + GENERIC)
     |--------------------------------------------------------------------------
     */
 
@@ -114,111 +108,129 @@ class StarWarsAiSearchService
             return $results;
         }
 
-        return $results->map(function ($item) use ($match) {
+        $like = fn($a, $b) => stripos($a ?? '', $b) !== false;
+
+        return $results->map(function ($item) use ($match, $like) {
 
             $matchData = [];
 
             /*
             |--------------------------------------------------------------------------
-            | VEHICLE MATCH
+            | SEARCH IN FILMS
             |--------------------------------------------------------------------------
             */
 
-            if (!empty($match['vehicle']) && method_exists($item, 'films')) {
+            foreach ($item->films ?? [] as $film) {
 
-                foreach ($item->films ?? [] as $film) {
-
+                // VEHICLE
+                if (!empty($match['vehicle'])) {
                     foreach ($film->vehicles ?? [] as $vehicle) {
-
-                        if (stripos($vehicle->name, $match['vehicle']) !== false) {
-
-                            $matchData['vehicle'] = $vehicle;
-                            $matchData['film']    = $film;
-
+                        if ($like($vehicle->name, $match['vehicle'])) {
+                            $matchData = [
+                                'vehicle' => $vehicle,
+                                'film'    => $film
+                            ];
                             break 2;
                         }
                     }
                 }
-            }
 
-            /*
-            |--------------------------------------------------------------------------
-            | STARSHIP MATCH
-            |--------------------------------------------------------------------------
-            */
-
-            if (!empty($match['starship']) && method_exists($item, 'films')) {
-
-                foreach ($item->films ?? [] as $film) {
-
+                // STARSHIP
+                if (!empty($match['starship'])) {
                     foreach ($film->starships ?? [] as $starship) {
-
-                        if (stripos($starship->name, $match['starship']) !== false) {
-
-                            $matchData['starship'] = $starship;
-                            $matchData['film']     = $film;
-
+                        if ($like($starship->name, $match['starship'])) {
+                            $matchData = [
+                                'starship' => $starship,
+                                'film'     => $film
+                            ];
                             break 2;
                         }
                     }
                 }
-            }
 
-            /*
-            |--------------------------------------------------------------------------
-            | SPECIES MATCH
-            |--------------------------------------------------------------------------
-            */
-
-            if (!empty($match['species']) && method_exists($item, 'films')) {
-
-                foreach ($item->films ?? [] as $film) {
-
+                // SPECIES
+                if (!empty($match['species'])) {
                     foreach ($film->species ?? [] as $species) {
-
-                        if (stripos($species->name, $match['species']) !== false) {
-
-                            $matchData['species'] = $species;
-                            $matchData['film']    = $film;
-
+                        if ($like($species->name, $match['species'])) {
+                            $matchData = [
+                                'species' => $species,
+                                'film'    => $film
+                            ];
                             break 2;
                         }
                     }
                 }
-            }
 
-            /*
-            |--------------------------------------------------------------------------
-            | FILM MATCH
-            |--------------------------------------------------------------------------
-            */
-
-            if (!empty($match['film']) && method_exists($item, 'films')) {
-
-                foreach ($item->films ?? [] as $film) {
-
-                    if (stripos($film->title, $match['film']) !== false) {
-
-                        $matchData['film'] = $film;
-                        break;
-                    }
+                // FILM
+                if (!empty($match['film']) && $like($film->title, $match['film'])) {
+                    $matchData = ['film' => $film];
+                    break;
                 }
             }
 
             /*
             |--------------------------------------------------------------------------
-            | PERSON MATCH
+            | SEARCH IN PEOPLE (CRITICAL FIX)
             |--------------------------------------------------------------------------
             */
 
-            if (!empty($match['person']) && method_exists($item, 'people')) {
+            foreach ($item->people ?? [] as $person) {
 
-                foreach ($item->people ?? [] as $person) {
+                // PERSON
+                if (!empty($match['person']) && $like($person->name, $match['person'])) {
+                    $matchData = ['person' => $person];
+                    break;
+                }
 
-                    if (stripos($person->name, $match['person']) !== false) {
+                // SPECIES via PERSON
+                if (!empty($match['species'])) {
+                    foreach ($person->species ?? [] as $species) {
+                        if ($like($species->name, $match['species'])) {
+                            $matchData = [
+                                'species' => $species,
+                                'person'  => $person
+                            ];
+                            break 2;
+                        }
+                    }
+                }
 
-                        $matchData['person'] = $person;
-                        break;
+                // VEHICLE via PERSON
+                if (!empty($match['vehicle'])) {
+                    foreach ($person->vehicles ?? [] as $vehicle) {
+                        if ($like($vehicle->name, $match['vehicle'])) {
+                            $matchData = [
+                                'vehicle' => $vehicle,
+                                'person'  => $person
+                            ];
+                            break 2;
+                        }
+                    }
+                }
+
+                // STARSHIP via PERSON
+                if (!empty($match['starship'])) {
+                    foreach ($person->starships ?? [] as $starship) {
+                        if ($like($starship->name, $match['starship'])) {
+                            $matchData = [
+                                'starship' => $starship,
+                                'person'   => $person
+                            ];
+                            break 2;
+                        }
+                    }
+                }
+
+                // FILM via PERSON
+                if (!empty($match['film'])) {
+                    foreach ($person->films ?? [] as $film) {
+                        if ($like($film->title, $match['film'])) {
+                            $matchData = [
+                                'film'   => $film,
+                                'person' => $person
+                            ];
+                            break 2;
+                        }
                     }
                 }
             }
@@ -235,7 +247,7 @@ class StarWarsAiSearchService
 
             /*
             |--------------------------------------------------------------------------
-            | ASSIGN MATCH SAFELY
+            | FINAL ASSIGN
             |--------------------------------------------------------------------------
             */
 
