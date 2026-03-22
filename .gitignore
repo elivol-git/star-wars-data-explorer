@@ -9,8 +9,6 @@
 .env.production
 .phpunit.result.cache
 .dockerignore
-docker-compose.yml
-docker/*
 planets_windows_docker.zip
 Homestead.json
 Homestead.yaml
@@ -20,3 +18,4 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+90larisA195
