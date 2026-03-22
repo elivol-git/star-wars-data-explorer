@@ -1,8 +1,12 @@
 // app.js
 import { createApp } from "vue"
+import axios from "axios"
 import Planets from "./components/Planets.vue"
 import AiSearchPage from "./components/AiSearchPage.vue"
 import "../css/ai-search.css"
+
+// Set Axios base URL to Laravel container (inside Docker network)
+axios.defaults.baseURL = 'http://app:8000'
 
 const el = document.getElementById("app")
 
