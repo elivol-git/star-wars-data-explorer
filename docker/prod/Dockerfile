@@ -19,7 +19,8 @@ RUN composer install --no-dev --optimize-autoloader
 RUN php artisan config:clear \
  && php artisan cache:clear \
  && php artisan route:clear \
- && php artisan view:clear
+ && php artisan view:clear \
+ && php artisan migrate --force
 
 # Permissions (use 777 for debugging)
 RUN mkdir -p storage/logs \
