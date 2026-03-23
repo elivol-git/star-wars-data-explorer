@@ -3,13 +3,9 @@ set -e
 
 cd /var/www
 
-# Install dependencies (only if missing)
+# Composer dependencies (install if missing)
 if [ ! -d "vendor" ]; then
     composer install --no-interaction --prefer-dist
-fi
-
-if [ ! -d "node_modules" ]; then
-    npm install
 fi
 
 # Permissions
@@ -20,9 +16,5 @@ php artisan key:generate || true
 php artisan migrate --force || true
 php artisan swapi:sync || true
 
-# Start services
-php-fpm &
-npm run dev &
-
-# Keep container alive
-tail -f /dev/null
+# Start PHP-FPM in foreground (Render expects a foreground process)
+php-fpm -F
