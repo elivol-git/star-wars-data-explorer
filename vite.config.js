@@ -6,22 +6,16 @@ export default defineConfig({
   plugins: [
     laravel({
       input: ['resources/css/app.css', 'resources/css/style.css', 'resources/js/app.js'],
-      refresh: true, // HMR
+      refresh: true,
+      // Dev server HMR (kept for local dev)
       server: {
         hmr: {
-          host: 'localhost', // or your Docker host IP
+          host: 'localhost',
         },
       },
     }),
     vue(),
   ],
-  server: {
-    host: true,       // allow connections from outside container
-    port: 5173,
-    strictPort: true, // fail if port is busy
-    hmr: {
-      host: 'localhost',
-      protocol: 'ws',
-    },
-  },
+  base: '/',
+});
 });
