@@ -36,7 +36,7 @@ RUN composer install --no-dev --optimize-autoloader
 # ---------------------------
 # Build frontend assets
 # ---------------------------
-RUN npm install \
+RUN npm ci \
  && npm run build
 
 # ---------------------------
