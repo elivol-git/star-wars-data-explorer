@@ -7,7 +7,7 @@ FROM php:8.3-fpm
 # Install dependencies
 # ---------------------------
 RUN apt-get update && apt-get install -y \
-    nginx git unzip curl libzip-dev zip nodejs npm \
+    git unzip curl libzip-dev zip nodejs npm \
     && docker-php-ext-install pdo_mysql zip pcntl \
     && pecl install redis \
     && docker-php-ext-enable redis \
@@ -40,7 +40,13 @@ RUN npm install \
  && npm run build
 
 # ---------------------------
-# Clear caches
+# Create SQLite DB (AFTER copy!)
+# ---------------------------
+RUN mkdir -p database \
+ && touch database/database.sqlite
+
+# ---------------------------
+# Laravel cache clear
 # ---------------------------
 RUN php artisan config:clear \
  && php artisan cache:clear \
@@ -48,28 +54,23 @@ RUN php artisan config:clear \
  && php artisan view:clear
 
 # ---------------------------
-# Permissions
+# Permissions (single place)
 # ---------------------------
-RUN mkdir -p storage/logs \
- && chmod -R 777 storage bootstrap/cache \
- && chmod -R 777 public
+RUN chmod -R 777 storage bootstrap/cache database
 
 # ---------------------------
-# Enable PHP errors for debugging
+# Enable PHP errors (debug only)
 # ---------------------------
 RUN echo "display_errors=On" >> /usr/local/etc/php/conf.d/docker-php.ini \
  && echo "display_startup_errors=On" >> /usr/local/etc/php/conf.d/docker-php.ini \
  && echo "error_reporting=E_ALL" >> /usr/local/etc/php/conf.d/docker-php.ini
 
 # ---------------------------
-# Nginx config
+# Expose port for Laravel serve
 # ---------------------------
-COPY docker/prod/nginx.conf /etc/nginx/conf.d/default.conf
-
-# Expose port expected by Render
 EXPOSE 10000
 
 # ---------------------------
-# Entrypoint: PHP-FPM foreground (Render expects single process)
+# Start Laravel (NOT php-fpm!)
 # ---------------------------
-CMD ["php-fpm", "-F"]
+CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=10000"]
