@@ -12,7 +12,7 @@
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/skeleton/2.0.4/skeleton.min.css">
 
-    @vite(['resources/css/style.css', 'resources/css/app.css'])
+   @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 </head>
@@ -25,8 +25,6 @@
 </main>
 
 @yield('scripts')
-
-@vite('resources/js/app.js')
 
 </body>
 </html>

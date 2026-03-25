@@ -7,6 +7,9 @@ cd /var/www
 chmod -R 777 storage bootstrap/cache database
 
 # Laravel setup
+php artisan config:clear
+php artisan cache:clear
+php artisan view:clear
 php artisan migrate --force || true
 php artisan swapi:sync || true
 
