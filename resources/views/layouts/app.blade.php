@@ -14,7 +14,6 @@
 
    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
 </head>
 <body class="space-mode">
 
