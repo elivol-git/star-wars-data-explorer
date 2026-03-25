@@ -67,6 +67,4 @@ RUN echo "display_errors=On" >> /usr/local/etc/php/conf.d/docker-php.ini \
 
 COPY docker/prod/nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
-
-CMD ["sh", "-c", "php-fpm -F & nginx -g 'daemon off;'"]
+EXPOSE 10000

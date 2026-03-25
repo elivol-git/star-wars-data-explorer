@@ -3,10 +3,15 @@ set -e
 
 cd /var/www
 
-chmod -R 777 storage bootstrap/cache
+# Permissions
+chmod -R 777 storage bootstrap/cache database
 
+# Laravel setup
 php artisan migrate --force || true
 php artisan swapi:sync || true
 
-# ✅ Serve app for Render
-php artisan serve --host=0.0.0.0 --port=10000
+# Start PHP-FPM
+php-fpm &
+
+# Start Nginx (MAIN process)
+nginx -g "daemon off;"
