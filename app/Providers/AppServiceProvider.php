@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Services\Llm\Clients\HuggingFaceClient;
 use App\Services\Llm\Clients\LlmClientInterface;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
