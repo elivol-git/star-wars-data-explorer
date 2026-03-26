@@ -3,19 +3,25 @@ set -e
 
 cd /var/www
 
-echo "Fixing Laravel directories..."
+echo "Running as user:"
+whoami
 
-# 🔥 Create ALL required directories
+echo "Fixing permissions..."
+
+# 🔥 Force ownership (this is the missing piece)
+chown -R www-data:www-data /var/www || true
+
+# 🔥 Create all required dirs
 mkdir -p storage/logs
 mkdir -p storage/framework/cache/data
 mkdir -p storage/framework/sessions
 mkdir -p storage/framework/views
 mkdir -p bootstrap/cache
 
-# 🔥 Force permissions (strong fix)
+# 🔥 Force permissions
 chmod -R 777 storage bootstrap/cache
 
-# 🔥 Optional: ensure SQLite exists
+# SQLite (if used)
 mkdir -p database
 touch database/database.sqlite
 chmod -R 777 database

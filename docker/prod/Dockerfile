@@ -34,14 +34,14 @@ COPY . .
 RUN composer install --no-dev --optimize-autoloader
 
 # ---------------------------
-# Build frontend assets (clean)
+# Build frontend assets
 # ---------------------------
 RUN rm -rf node_modules public/build \
  && npm ci \
  && npm run build
 
 # ---------------------------
-# Create SQLite DB (if needed)
+# Create SQLite DB
 # ---------------------------
 RUN mkdir -p database \
  && touch database/database.sqlite
@@ -54,15 +54,22 @@ RUN php artisan config:clear \
  && php artisan route:clear \
  && php artisan view:clear
 
+# ---------------------------
+# Create required Laravel dirs
+# ---------------------------
 RUN mkdir -p storage/logs \
  && mkdir -p storage/framework/cache/data \
  && mkdir -p storage/framework/sessions \
  && mkdir -p storage/framework/views \
- && chown -R www-data:www-data storage bootstrap/cache database \
- && chmod -R 775 storage bootstrap/cache database
+ && mkdir -p bootstrap/cache
 
 # ---------------------------
-# Enable PHP errors (debug only)
+# 🔥 IMPORTANT: allow runtime fixes
+# ---------------------------
+RUN chmod -R 777 /var/www
+
+# ---------------------------
+# PHP debug (optional)
 # ---------------------------
 RUN echo "display_errors=On" >> /usr/local/etc/php/conf.d/docker-php.ini \
  && echo "display_startup_errors=On" >> /usr/local/etc/php/conf.d/docker-php.ini \
@@ -74,6 +81,6 @@ RUN echo "display_errors=On" >> /usr/local/etc/php/conf.d/docker-php.ini \
 COPY docker/prod/nginx.conf /etc/nginx/conf.d/default.conf
 
 # ---------------------------
-# Expose port (Render requirement)
+# Expose port
 # ---------------------------
 EXPOSE 10000
