@@ -34,10 +34,7 @@ COPY . .
 RUN composer install --no-dev --optimize-autoloader
 
 # ---------------------------
-# Build frontend assets
-# ---------------------------
-# ---------------------------
-# Build frontend assets (CLEAN)
+# Build frontend assets (clean)
 # ---------------------------
 RUN rm -rf node_modules public/build \
  && npm ci \
@@ -57,10 +54,12 @@ RUN php artisan config:clear \
  && php artisan route:clear \
  && php artisan view:clear
 
-# ---------------------------
-# Permissions
-# ---------------------------
-RUN chmod -R 777 storage bootstrap/cache database public
+RUN mkdir -p storage/logs \
+ && mkdir -p storage/framework/cache/data \
+ && mkdir -p storage/framework/sessions \
+ && mkdir -p storage/framework/views \
+ && chown -R www-data:www-data storage bootstrap/cache database \
+ && chmod -R 775 storage bootstrap/cache database
 
 # ---------------------------
 # Enable PHP errors (debug only)
@@ -69,6 +68,12 @@ RUN echo "display_errors=On" >> /usr/local/etc/php/conf.d/docker-php.ini \
  && echo "display_startup_errors=On" >> /usr/local/etc/php/conf.d/docker-php.ini \
  && echo "error_reporting=E_ALL" >> /usr/local/etc/php/conf.d/docker-php.ini
 
+# ---------------------------
+# Nginx config
+# ---------------------------
 COPY docker/prod/nginx.conf /etc/nginx/conf.d/default.conf
 
+# ---------------------------
+# Expose port (Render requirement)
+# ---------------------------
 EXPOSE 10000
