@@ -19,3 +19,11 @@ Route::get('/', [HomeController::class, 'index']);
 Route::get("/ai-search", function () {
     return view("ai-search");
 });
+Route::get('/debug-log', function () {
+    try {
+        \Log::info("test");
+        return "LOG OK";
+    } catch (\Throwable $e) {
+        return $e->getMessage();
+    }
+});
