@@ -1,5 +1,5 @@
 # ---------------------------
-# Production Dockerfile with Nginx + PHP-FPM
+# Production Dockerfile (Render-ready)
 # ---------------------------
 FROM php:8.3-fpm
 
@@ -14,12 +14,18 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # ---------------------------
+# 🔥 RUN PHP-FPM AS ROOT (CRITICAL FIX)
+# ---------------------------
+RUN sed -i 's/user = www-data/user = root/' /usr/local/etc/php-fpm.d/www.conf \
+ && sed -i 's/group = www-data/group = root/' /usr/local/etc/php-fpm.d/www.conf
+
+# ---------------------------
 # Composer
 # ---------------------------
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 # ---------------------------
-# Set working directory
+# Working directory
 # ---------------------------
 WORKDIR /var/www
 
@@ -29,25 +35,30 @@ WORKDIR /var/www
 COPY . .
 
 # ---------------------------
-# Install PHP dependencies
+# Install PHP deps
 # ---------------------------
 RUN composer install --no-dev --optimize-autoloader
 
 # ---------------------------
-# Build frontend assets
+# Build frontend (Vite)
 # ---------------------------
 RUN rm -rf node_modules public/build \
  && npm ci \
  && npm run build
 
 # ---------------------------
-# Create SQLite DB
+# Prepare Laravel dirs
 # ---------------------------
-RUN mkdir -p database \
+RUN mkdir -p storage/logs \
+ && mkdir -p storage/framework/cache/data \
+ && mkdir -p storage/framework/sessions \
+ && mkdir -p storage/framework/views \
+ && mkdir -p bootstrap/cache \
+ && mkdir -p database \
  && touch database/database.sqlite
 
 # ---------------------------
-# Laravel cache clear
+# Clear caches
 # ---------------------------
 RUN php artisan config:clear \
  && php artisan cache:clear \
@@ -55,16 +66,7 @@ RUN php artisan config:clear \
  && php artisan view:clear
 
 # ---------------------------
-# Create required Laravel dirs
-# ---------------------------
-RUN mkdir -p storage/logs \
- && mkdir -p storage/framework/cache/data \
- && mkdir -p storage/framework/sessions \
- && mkdir -p storage/framework/views \
- && mkdir -p bootstrap/cache
-
-# ---------------------------
-# 🔥 IMPORTANT: allow runtime fixes
+# 🔥 FULL PERMISSION OPEN (Render-safe)
 # ---------------------------
 RUN chmod -R 777 /var/www
 
