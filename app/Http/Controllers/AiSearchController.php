@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
 use App\Services\Llm\Search\StarWarsAiSearchService;
 
 class AiSearchController extends Controller
@@ -19,18 +18,40 @@ class AiSearchController extends Controller
         }
 
         try {
-            $result = $service->search($q);
-//            Log::debug("result:". print_r($result, true));
-            return response()->json($result);
-
-        } catch (\Throwable $e) {
-            Log::error("AI Search failed", [
+            // 🔥 DEBUG BLOCK (TEMP)
+            return response()->json([
+                'debug' => true,
                 'query' => $q,
-                'error' => $e->getMessage()
+
+                // Runtime info
+                'user' => get_current_user(),
+                'uid' => getmyuid(),
+
+                // Storage checks
+                'storage_exists' => file_exists(storage_path()),
+                'logs_exists' => file_exists(storage_path('logs')),
+                'logs_writable' => is_writable(storage_path('logs')),
+
+                'log_file_exists' => file_exists(storage_path('logs/laravel.log')),
+                'log_file_writable' => file_exists(storage_path('logs/laravel.log'))
+                    ? is_writable(storage_path('logs/laravel.log'))
+                    : false,
+
+                'cache_exists' => file_exists(storage_path('framework/cache/data')),
+                'cache_writable' => is_writable(storage_path('framework/cache/data')),
             ]);
 
+            // 🔥 REAL LOGIC (enable after debug)
+            /*
+            $result = $service->search($q);
+            return response()->json($result);
+            */
+
+        } catch (\Throwable $e) {
+            // ❌ DO NOT LOG (it crashes)
             return response()->json([
-                'error' => 'AI search failed'
+                'error' => $e->getMessage(),
+                'trace' => substr($e->getTraceAsString(), 0, 1000),
             ], 500);
         }
     }
