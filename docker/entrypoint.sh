@@ -6,14 +6,9 @@ cd /var/www
 echo "Running as:"
 whoami
 
-echo "Fixing permissions..."
+echo "Fixing permissions (Render-safe)..."
 
-# 🔥 THIS is the real fix (not chmod 777)
-chown -R www-data:www-data storage bootstrap/cache database || true
-
-chmod -R 775 storage bootstrap/cache database || true
-
-# Ensure required dirs
+# 🔥 Create all required dirs FIRST
 mkdir -p storage/logs
 mkdir -p storage/framework/cache/data
 mkdir -p storage/framework/sessions
@@ -22,6 +17,9 @@ mkdir -p bootstrap/cache
 mkdir -p database
 
 touch database/database.sqlite
+
+# 🔥 THIS is the REAL fix (not chown)
+chmod -R 777 storage bootstrap/cache database
 
 echo "Laravel setup..."
 
@@ -34,5 +32,5 @@ php artisan swapi:sync || true
 
 echo "Starting services..."
 
-php-fpm -F &
+php-fpm &
 nginx -g "daemon off;"

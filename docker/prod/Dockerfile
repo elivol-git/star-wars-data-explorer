@@ -60,7 +60,7 @@ RUN php artisan config:clear \
 # ✅ CORRECT PERMISSIONS (NOT ROOT HACK)
 # ---------------------------
 RUN chown -R www-data:www-data /var/www \
- && chmod -R 775 storage bootstrap/cache database
+ && chmod -R 777 storage bootstrap/cache database
 
 # ---------------------------
 # PHP debug (optional)
