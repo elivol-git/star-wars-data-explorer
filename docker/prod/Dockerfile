@@ -1,6 +1,3 @@
-# ---------------------------
-# Production Dockerfile (Render-ready)
-# ---------------------------
 FROM php:8.3-fpm
 
 # ---------------------------
@@ -12,12 +9,6 @@ RUN apt-get update && apt-get install -y \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# ---------------------------
-# 🔥 RUN PHP-FPM AS ROOT (CRITICAL FIX)
-# ---------------------------
-RUN sed -i 's/user = www-data/user = root/' /usr/local/etc/php-fpm.d/www.conf \
- && sed -i 's/group = www-data/group = root/' /usr/local/etc/php-fpm.d/www.conf
 
 # ---------------------------
 # Composer
@@ -66,9 +57,10 @@ RUN php artisan config:clear \
  && php artisan view:clear
 
 # ---------------------------
-# 🔥 FULL PERMISSION OPEN (Render-safe)
+# ✅ CORRECT PERMISSIONS (NOT ROOT HACK)
 # ---------------------------
-RUN chmod -R 777 /var/www
+RUN chown -R www-data:www-data /var/www \
+ && chmod -R 775 storage bootstrap/cache database
 
 # ---------------------------
 # PHP debug (optional)

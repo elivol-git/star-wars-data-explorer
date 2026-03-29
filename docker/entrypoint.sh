@@ -6,8 +6,14 @@ cd /var/www
 echo "Running as:"
 whoami
 
-echo "Fixing runtime dirs..."
+echo "Fixing permissions..."
 
+# 🔥 THIS is the real fix (not chmod 777)
+chown -R www-data:www-data storage bootstrap/cache database || true
+
+chmod -R 775 storage bootstrap/cache database || true
+
+# Ensure required dirs
 mkdir -p storage/logs
 mkdir -p storage/framework/cache/data
 mkdir -p storage/framework/sessions
@@ -16,8 +22,6 @@ mkdir -p bootstrap/cache
 mkdir -p database
 
 touch database/database.sqlite
-
-chmod -R 777 storage bootstrap/cache database
 
 echo "Laravel setup..."
 
