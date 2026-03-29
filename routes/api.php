@@ -11,3 +11,13 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 // AI Search API (public + throttled)
 Route::middleware('throttle:20,1')->get('/ai-search', [AiSearchController::class, 'search']);
 
+Route::get('/debug-log', function () {
+    try {
+        \Log::info("test");
+        return response()->json(['status' => 'LOG OK']);
+    } catch (\Throwable $e) {
+        return response()->json([
+            'error' => $e->getMessage()
+        ], 500);
+    }
+});
