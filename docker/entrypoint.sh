@@ -6,12 +6,12 @@ cd /var/www
 echo "Running as:"
 whoami
 
-echo "Fixing permissions (FINAL FIX)..."
+echo "Fixing permissions..."
 
-# 🔥 Remove broken dirs completely
-rm -rf storage bootstrap/cache
+# 🔥 MUST match php-fpm user
+chown -R www-data:www-data /var/www || true
 
-# 🔥 Recreate everything clean
+# Create required dirs
 mkdir -p storage/logs
 mkdir -p storage/framework/cache/data
 mkdir -p storage/framework/sessions
@@ -19,10 +19,11 @@ mkdir -p storage/framework/views
 mkdir -p bootstrap/cache
 mkdir -p database
 
+touch storage/logs/laravel.log
 touch database/database.sqlite
 
-chown -R www-data:www-data storage bootstrap/cache database || true
-chmod -R 777 storage bootstrap/cache database
+# Permissions
+chmod -R 775 storage bootstrap/cache database
 
 echo "Laravel setup..."
 
@@ -35,6 +36,5 @@ php artisan swapi:sync || true
 
 echo "Starting services..."
 
-# 🔥 IMPORTANT: foreground php-fpm
-php-fpm -F &
+php-fpm &
 nginx -g "daemon off;"
