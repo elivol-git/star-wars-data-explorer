@@ -10,7 +10,7 @@
                 <li
                     v-for="film in displayedFilms"
                     :key="film.id"
-                    class="entity-link"
+                    :class="['entity-link', { 'entity-link-match': isMatchedFilm(film) }]"
                     @click="$emit('open-entity', film)"
                 >
                     {{ film.title ?? 'Unknown film' }}
@@ -37,7 +37,7 @@
                 <li
                     v-for="person in displayedPeople"
                     :key="person.id"
-                    class="entity-link"
+                    :class="['entity-link', { 'entity-link-match': isMatchedPerson(person) }]"
                     @click="$emit('open-entity', person)"
                 >
                     {{ person.name ?? 'Unknown resident' }}
@@ -62,7 +62,7 @@ import { computed, ref } from 'vue';
 
 const LIMIT = 5;
 
-defineProps({
+const props = defineProps({
     planet: Object
 });
 
@@ -74,8 +74,35 @@ const normalize = (v) => {
     return arr.filter(item => typeof item === 'object' && item !== null);
 };
 
-const films = computed(() => normalize(__props.planet.films));
-const people = computed(() => normalize(__props.planet.people));
+const match = computed(() => props.planet?.match ?? {});
+
+const isSameEntity = (a, b, labelKey) => {
+    if (!a || !b) return false;
+    if (a.id && b.id) return a.id === b.id;
+    if (labelKey && a[labelKey] && b[labelKey]) {
+        return String(a[labelKey]).toLowerCase() === String(b[labelKey]).toLowerCase();
+    }
+    return false;
+};
+
+const prioritizeMatch = (items, matcher) => {
+    const idx = items.findIndex(matcher);
+    if (idx <= 0) return items;
+    return [items[idx], ...items.slice(0, idx), ...items.slice(idx + 1)];
+};
+
+const films = computed(() => {
+    const list = normalize(props.planet?.films);
+    return prioritizeMatch(list, (film) => isSameEntity(film, match.value?.film, 'title'));
+});
+
+const people = computed(() => {
+    const list = normalize(props.planet?.people);
+    return prioritizeMatch(list, (person) => isSameEntity(person, match.value?.person, 'name'));
+});
+
+const isMatchedFilm = (film) => isSameEntity(film, match.value?.film, 'title');
+const isMatchedPerson = (person) => isSameEntity(person, match.value?.person, 'name');
 
 const displayedFilms = computed(() =>
     showAllFilms.value ? films.value : films.value.slice(0, LIMIT)
@@ -85,3 +112,10 @@ const displayedPeople = computed(() =>
     showAllPeople.value ? people.value : people.value.slice(0, LIMIT)
 );
 </script>
+
+<style scoped>
+.entity-link-match {
+    color: #ffd700;
+    font-weight: 700;
+}
+</style>

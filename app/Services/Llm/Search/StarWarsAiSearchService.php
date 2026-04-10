@@ -17,7 +17,7 @@ class StarWarsAiSearchService
     public function search(string $query): array
     {
         return Cache::remember(
-            "ai_search_" . md5($query),
+            "ai_search_v2_" . md5($query),
             60,
             function () use ($query) {
 
@@ -31,6 +31,7 @@ class StarWarsAiSearchService
 
                 Log::info("AI Parsed:", $parsed);
                 Log::info("match:". print_r($match, true));
+                Log::info("entity:". $entity);
 
                 /*
                 |--------------------------------------------------------------------------
@@ -48,6 +49,44 @@ class StarWarsAiSearchService
                     );
 
                     $this->repo->loadPopupRelations($entity, $data);
+
+                    if ($entity === 'films') {
+                        $planets = $this->extractPlanetsFromFilms($data);
+                        $this->repo->loadPopupRelations('planets', $planets);
+
+                        return [
+                            "entity" => "planets",
+                            "parsed" => $parsed,
+                            "data"   => $this->attachMatch($planets, $match)
+                        ];
+                    }
+
+                    if ($entity === 'people') {
+                        $planets = $this->extractPlanetsFromPeople($data);
+                        $this->repo->loadPopupRelations('planets', $planets);
+
+                        return [
+                            "entity" => "planets",
+                            "parsed" => $parsed,
+                            "data"   => $this->attachMatch($planets, $match)
+                        ];
+                    }
+                    $secondaryEntities = ['vehicles'=>'extractPlanetsFromVehicles', 'starships'=>'extractPlanetsFromStarships', 'species'=>'extractPlanetsFromSpecies'];
+
+                    if (!empty($secondaryEntities[$entity])) {
+                        $data->loadMissing(['films.planets', 'pilots.homeworld']);
+
+                        $planets = $this->{$secondaryEntities[$entity]}($data);
+//                        Log::info("planet:". print_r($planets, true));
+
+                        $this->repo->loadPopupRelations('planets', $planets);
+
+                        return [
+                            "entity" => "planets",
+                            "parsed" => $parsed,
+                            "data"   => $this->attachMatch($planets, $match)
+                        ];
+                    }
 
                     return [
                         "entity" => $entity,
@@ -257,5 +296,219 @@ class StarWarsAiSearchService
 
             return $item;
         });
+    }
+
+    private function extractPlanetsFromFilms(Collection $films): Collection
+    {
+        return $films
+            ->flatMap(function ($film) {
+                return collect($film->planets ?? [])->map(function ($planet) use ($film) {
+                    if (!$planet->getAttribute('match')) {
+                        $planet->setAttribute('match', [
+                            'film' => [
+                                'id' => $film->id,
+                                'title' => $film->title
+                            ]
+                        ]);
+                    }
+
+                    return $planet;
+                });
+            })
+            ->unique('id')
+            ->values();
+    }
+
+    private function extractPlanetsFromPeople(Collection $people): Collection
+    {
+        return $people
+            ->flatMap(function ($person) {
+                $homeworld = null;
+
+                if (!empty($person->homeworld_id)) {
+                    $homeworld = \App\Models\Planet::query()->find($person->homeworld_id);
+                }
+
+                return collect([$homeworld])
+                    ->filter(fn($planet) => is_object($planet) && method_exists($planet, 'getAttribute'))
+                    ->map(function ($planet) use ($person) {
+                        if (!$planet->getAttribute('match')) {
+                            $planet->setAttribute('match', [
+                                'person' => [
+                                    'id' => $person->id,
+                                    'name' => $person->name
+                                ]
+                            ]);
+                        }
+
+                        return $planet;
+                    });
+            })
+            ->unique('id')
+            ->values();
+    }
+
+    private function extractPlanetsFromVehicles(Collection $vehicles): Collection
+    {
+        return $vehicles
+            ->flatMap(function ($vehicle) {
+                $fromFilms = collect($vehicle->films ?? [])
+                    ->flatMap(function ($film) use ($vehicle) {
+                        return collect($film->planets ?? [])->map(function ($planet) use ($vehicle, $film) {
+                            if (!$planet->getAttribute('match')) {
+                                $planet->setAttribute('match', [
+                                    'vehicle' => [
+                                        'id' => $vehicle->id,
+                                        'name' => $vehicle->name
+                                    ],
+                                    'film' => [
+                                        'id' => $film->id,
+                                        'title' => $film->title
+                                    ]
+                                ]);
+                            }
+
+                            return $planet;
+                        });
+                    });
+
+                $fromPilots = collect($vehicle->pilots ?? [])
+                    ->map(function ($pilot) use ($vehicle) {
+                        $planet = $pilot->homeworld ?? null;
+
+                        if (!$planet || !method_exists($planet, 'getAttribute')) {
+                            return null;
+                        }
+
+                        if (!$planet->getAttribute('match')) {
+                            $planet->setAttribute('match', [
+                                'vehicle' => [
+                                    'id' => $vehicle->id,
+                                    'name' => $vehicle->name
+                                ],
+                                'person' => [
+                                    'id' => $pilot->id,
+                                    'name' => $pilot->name
+                                ]
+                            ]);
+                        }
+
+                        return $planet;
+                    })
+                    ->filter();
+
+                return $fromFilms->merge($fromPilots);
+            })
+            ->unique('id')
+            ->values();
+    }
+
+    private function extractPlanetsFromStarships(Collection $starships): Collection
+    {
+        return $starships
+            ->flatMap(function ($starship) {
+                $fromFilms = collect($starship->films ?? [])
+                    ->flatMap(function ($film) use ($starship) {
+                        return collect($film->planets ?? [])->map(function ($planet) use ($starship, $film) {
+                            if (!$planet->getAttribute('match')) {
+                                $planet->setAttribute('match', [
+                                    'starship' => [
+                                        'id' => $starship->id,
+                                        'name' => $starship->name
+                                    ],
+                                    'film' => [
+                                        'id' => $film->id,
+                                        'title' => $film->title
+                                    ]
+                                ]);
+                            }
+
+                            return $planet;
+                        });
+                    });
+
+                $fromPilots = collect($starship->pilots ?? [])
+                    ->map(function ($pilot) use ($starship) {
+                        $planet = $pilot->homeworld ?? null;
+
+                        if (!$planet || !method_exists($planet, 'getAttribute')) {
+                            return null;
+                        }
+
+                        if (!$planet->getAttribute('match')) {
+                            $planet->setAttribute('match', [
+                                'starship' => [
+                                    'id' => $starship->id,
+                                    'name' => $starship->name
+                                ],
+                                'person' => [
+                                    'id' => $pilot->id,
+                                    'name' => $pilot->name
+                                ]
+                            ]);
+                        }
+
+                        return $planet;
+                    })
+                    ->filter();
+
+                return $fromFilms->merge($fromPilots);
+            })
+            ->unique('id')
+            ->values();
+    }
+    private function extractPlanetsFromSpecies(Collection $species): Collection
+    {
+        return $species
+            ->flatMap(function ($species) {
+                $fromFilms = collect($species->films ?? [])
+                    ->flatMap(function ($film) use ($species) {
+                        return collect($film->planets ?? [])->map(function ($planet) use ($species, $film) {
+                            if (!$planet->getAttribute('match')) {
+                                $planet->setAttribute('match', [
+                                    'species' => [
+                                        'id' => $species->id,
+                                        'name' => $species->name
+                                    ],
+                                    'film' => [
+                                        'id' => $film->id,
+                                        'title' => $film->title
+                                    ]
+                                ]);
+                            }
+
+                            return $planet;
+                        });
+                    });
+
+                $fromPilots = collect($species->people ?? [])
+                    ->map(function ($pilot) use ($species) {
+                        $planet = $pilot->homeworld ?? null;
+
+                        if (!$planet || !method_exists($planet, 'getAttribute')) {
+                            return null;
+                        }
+
+                        if (!$planet->getAttribute('match')) {
+                            $planet->setAttribute('match', [
+                                'species' => [
+                                    'id' => $species->id,
+                                    'name' => $species->name
+                                ],
+                                'person' => [
+                                    'id' => $pilot->id,
+                                    'name' => $pilot->name
+                                ]
+                            ]);
+                        }
+
+                        return $planet;
+                    })
+                    ->filter();
+
+                return $fromFilms->merge($fromPilots);
+            })
+            ->unique('id')
+            ->values();
     }
 }

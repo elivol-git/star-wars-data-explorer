@@ -24,7 +24,7 @@ class AiSearchController extends Controller
             return response()->json($result);
 
         } catch (\Throwable $e) {
-            Log::error("AI Search failed", [
+            Log::error("AI Search failed:", [
                 'query' => $q,
                 'error' => $e->getMessage()
             ]);

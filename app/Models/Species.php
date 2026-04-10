@@ -57,7 +57,7 @@ class Species extends Model
         return $this->belongsToMany(Film::class, PivotTables::FILM_SPECIES, 'species_id', 'film_id');
     }
 
-    public function people(): BelongsToMany
+    public function pilots(): BelongsToMany
     {
         return $this->belongsToMany(Person::class, PivotTables::PERSON_SPECIES, 'species_id');
     }

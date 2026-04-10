@@ -90,7 +90,7 @@ class SwapiRelationshipHandler
     public function syncSpeciesRelations(Species $species, array $data): void
     {
         $this->attachMany(
-            $species->people(),
+            $species->pilots(),
             $data['people'] ?? [],
             fn ($url) => $this->people->store($url)->id
         );

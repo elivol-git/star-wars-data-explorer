@@ -23,3 +23,6 @@ vendor
 .git
 .env
 docker/dev
+docker/ssl/*
+*.pem
+*.key

@@ -70,7 +70,7 @@ class StarWarsSearchRepository
             'search_with' => ['films:id,title'],
             'popup_with' => [
                 'films',
-                'people',
+                'pilots',
                 'homeworld'
             ]
         ],
@@ -218,9 +218,17 @@ class StarWarsSearchRepository
 
                     foreach ($filters as $nested => $nestedFilters) {
 
+                        if (is_array($nestedFilters)) {
+                            $normalized[] = [
+                                "$relation.$nested",
+                                $nestedFilters
+                            ];
+                            continue;
+                        }
+
                         $normalized[] = [
-                            "$relation.$nested",
-                            $nestedFilters
+                            $relation,
+                            [$nested => $nestedFilters]
                         ];
                     }
 
@@ -439,7 +447,16 @@ class StarWarsSearchRepository
 
         if(!$collection->count()) return;
 
-        $collection->load($config['popup_with']);
+        if (method_exists($collection, 'load')) {
+            $collection->load($config['popup_with']);
+            return;
+        }
+
+        $collection->each(function ($model) use ($config) {
+            if (is_object($model) && method_exists($model, 'load')) {
+                $model->load($config['popup_with']);
+            }
+        });
     }
 
     /*

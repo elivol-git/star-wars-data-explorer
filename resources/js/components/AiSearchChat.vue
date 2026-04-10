@@ -31,10 +31,12 @@
                     <div v-else class="grid">
 
                         <!-- PLANETS -->
-                        <template v-if="type === 'planets'">
+                        <template
+                            v-if="type === 'planets' || (type === 'films' && planetsFromFilms(items).length)"
+                        >
 
                             <PlanetCard
-                                v-for="p in items"
+                                v-for="p in type === 'films' ? planetsFromFilms(items) : items"
                                 :key="p.id"
                                 :planet="p"
                                 :match="p.match"
@@ -65,16 +67,19 @@
             <!-- SINGLE ENTITY -->
             <div v-else>
 
-                <div v-if="data?.length === 0" class="empty">
+                <div
+                    v-if="entity === 'films' ? filmPlanets.length === 0 : data?.length === 0"
+                    class="empty"
+                >
                     No results found
                 </div>
 
                 <div v-else class="grid">
 
-                    <template v-if="entity === 'planets'">
+                    <template v-if="entity === 'planets' || entity === 'films'">
 
                         <PlanetCard
-                            v-for="p in data"
+                            v-for="p in entity === 'films' ? filmPlanets : data"
                             :key="p.id"
                             :planet="p"
                             :match="p.match"
@@ -105,7 +110,7 @@
 
 <script setup>
 
-import { ref, onMounted } from "vue"
+import { ref, computed, onMounted } from "vue"
 import PlanetCard from "./PlanetCard.vue"
 import EntityCard from "./entities/EntityCard.vue"
 
@@ -113,6 +118,42 @@ const entity = ref(null)
 const data = ref(null)
 const loading = ref(true)
 const error = ref(null)
+
+function normalizeList(value) {
+    if (Array.isArray(value)) return value
+    return value?.data ?? []
+}
+
+function planetsFromFilms(films) {
+    if (!Array.isArray(films)) return []
+
+    const seen = new Set()
+    const planets = []
+
+    for (const film of films) {
+        for (const planet of normalizeList(film?.planets)) {
+            if (!planet?.id || seen.has(planet.id)) continue
+
+            seen.add(planet.id)
+            planets.push({
+                ...planet,
+                match: planet.match ?? {
+                    film: {
+                        id: film.id,
+                        title: film.title
+                    }
+                }
+            })
+        }
+    }
+
+    return planets
+}
+
+const filmPlanets = computed(() => {
+    if (entity.value !== "films") return []
+    return planetsFromFilms(data.value)
+})
 
 async function loadResults(q){
 
