@@ -1,7 +1,7 @@
 FROM php:8.3-fpm
 
 RUN apt-get update && apt-get install -y \
-    git unzip curl libzip-dev zip nginx supervisor \
+    git unzip curl libzip-dev zip nginx supervisor awscli \
     && docker-php-ext-install pdo_mysql zip pcntl \
     && pecl install redis \
     && docker-php-ext-enable redis \
