@@ -13,28 +13,36 @@ class LlmSearchService
 
     public function parseQuery(string $query): array
     {
-        $response = $this->client->chat(
-            [
+        try {
+            $response = $this->client->chat(
                 [
-                    "role" => "system",
-                    "content" => $this->systemPrompt(),
+                    [
+                        "role" => "system",
+                        "content" => $this->systemPrompt(),
+                    ],
+                    [
+                        "role" => "user",
+                        "content" => $query,
+                    ],
                 ],
                 [
-                    "role" => "user",
-                    "content" => $query,
-                ],
-            ],
-            [
-                "temperature" => 0,
-                "top_p" => 1,
-                "max_tokens" => 400,
-            ]
-        );
+                    "temperature" => 0,
+                    "top_p" => 1,
+                    "max_tokens" => 400,
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::warning('LLM unavailable, fallback parser used', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return $this->fallback($query);
+        }
 
         $content = data_get($response, 'choices.0.message.content');
 
         if (!$content) {
-            throw new \Exception("Empty LLM response");
+            return $this->fallback($query);
         }
 
         Log::info("Raw LLM response", ['response' => $content]);

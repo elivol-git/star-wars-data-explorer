@@ -1,92 +1,36 @@
-version: "3.9"
-
 services:
-  app:
-    build:
-      context: .
-      dockerfile: docker/dev/Dockerfile
-    container_name: planets_app
-    volumes:
-      - .:/var/www
-    working_dir: /var/www
-    environment:
-      APP_ENV: local
-      APP_DEBUG: true
-      DB_CONNECTION: mysql
-      DB_HOST: db
-      DB_PORT: 3306
-      DB_DATABASE: planets
-      DB_USERNAME: planets_user
-      DB_PASSWORD: Planets@2024!Secure
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    ports:
-      - "8000:8000"
-    command: >
-      sh -c "
-        php artisan config:clear &&
-        php artisan migrate --force &&
-        php artisan swapi:sync &&
-        php-fpm -F
-      "
+    app:
+        build:
+            context: .
+        volumes:
+            - .:/var/www
+        networks:
+            - app
 
-  db:
-    image: mysql:8.0
-    container_name: planets_db
-    restart: unless-stopped
-    environment:
-      MYSQL_DATABASE: planets
-      MYSQL_USER: planets_user
-      MYSQL_PASSWORD: Planets@2024!Secure
-      MYSQL_ROOT_PASSWORD: root
-    ports:
-      - "3306:3306"
-    volumes:
-      - dbdata:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      retries: 5
-      timeout: 5s
+    nginx:
+        image: nginx:latest
+        networks:
+            - app
 
-  redis:
-    image: redis:7
-    container_name: planets_redis
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      retries: 5
-      timeout: 5s
+    db:
+        image: mysql:8.0
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_USER: ${DB_USERNAME}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_ROOT_PASSWORD: root
+        volumes:
+            - dbdata:/var/lib/mysql
+        networks:
+            - app
 
-  frontend:
-    image: node:20
-    container_name: planets_frontend
-    working_dir: /var/www
-    volumes:
-      - .:/var/www
-    command: sh -c "npm install && npm run dev -- --host"
-    ports:
-      - "5173:5173"
-    depends_on:
-      - app
-  nginx:
-    image: nginx:latest
-    container_name: planets_nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - .:/var/www
-      - ./docker/dev/nginx.conf:/etc/nginx/conf.d/default.conf
-      - ./docker/ssl:/etc/nginx/ssl   # 🔥 THIS LINE
-    depends_on:
-      - app
+    redis:
+        image: redis:7-alpine
+        networks:
+            - app
+
+networks:
+    app:
+
 volumes:
-  dbdata:
+    dbdata:

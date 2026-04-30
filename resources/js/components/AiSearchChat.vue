@@ -15,28 +15,24 @@
             <div v-if="entity === 'mixed'">
 
                 <div
-                    v-for="(items, type) in data"
-                    :key="type"
+                    v-for="group in mixedGroups"
+                    :key="group.type"
                     class="group"
                 >
 
                     <h2 class="group-title">
-                        {{ type }}
+                        {{ group.type }}
                     </h2>
 
-                    <div v-if="items.length === 0" class="empty">
-                        No results
-                    </div>
-
-                    <div v-else class="grid">
+                    <div class="grid">
 
                         <!-- PLANETS -->
                         <template
-                            v-if="type === 'planets' || (type === 'films' && planetsFromFilms(items).length)"
+                            v-if="group.type === 'planets' || (group.type === 'films' && planetsFromFilms(group.items).length)"
                         >
 
                             <PlanetCard
-                                v-for="p in type === 'films' ? planetsFromFilms(items) : items"
+                                v-for="p in group.type === 'films' ? planetsFromFilms(group.items) : group.items"
                                 :key="p.id"
                                 :planet="p"
                                 :match="p.match"
@@ -49,9 +45,9 @@
                         <template v-else>
 
                             <EntityCard
-                                v-for="x in items"
+                                v-for="x in group.items"
                                 :key="x.id"
-                                :type="type"
+                                :type="group.type"
                                 :item="x"
                             />
 
@@ -153,6 +149,31 @@ function planetsFromFilms(films) {
 const filmPlanets = computed(() => {
     if (entity.value !== "films") return []
     return planetsFromFilms(data.value)
+})
+
+const mixedGroups = computed(() => {
+    if (entity.value !== "mixed" || !data.value || typeof data.value !== "object") {
+        return []
+    }
+
+    const groups = []
+
+    for (const [type, items] of Object.entries(data.value)) {
+        const list = Array.isArray(items) ? items : []
+
+        if (type === "films") {
+            if (planetsFromFilms(list).length > 0) {
+                groups.push({ type, items: list })
+            }
+            continue
+        }
+
+        if (list.length > 0) {
+            groups.push({ type, items: list })
+        }
+    }
+
+    return groups
 })
 
 async function loadResults(q){

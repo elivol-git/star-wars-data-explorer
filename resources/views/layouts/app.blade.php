@@ -24,6 +24,7 @@
 </main>
 
 @yield('scripts')
+<script src="{{ asset('js/header-autocomplete.js') }}" defer></script>
 
 </body>
 </html>

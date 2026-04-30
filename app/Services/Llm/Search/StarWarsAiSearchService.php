@@ -101,35 +101,43 @@ class StarWarsAiSearchService
                 |--------------------------------------------------------------------------
                 */
 
+                $mixedData = [
+                    "planets" => $this->attachMatch(
+                        $this->repo->search('planets', $keywords, $filters, $relations),
+                        $match
+                    ),
+                    "films" => $this->attachMatch(
+                        $this->repo->search('films', $keywords, $filters, $relations),
+                        $match
+                    ),
+                    "people" => $this->attachMatch(
+                        $this->repo->search('people', $keywords, $filters, $relations),
+                        $match
+                    ),
+                    "species" => $this->attachMatch(
+                        $this->repo->search('species', $keywords, $filters, $relations),
+                        $match
+                    ),
+                    "starships" => $this->attachMatch(
+                        $this->repo->search('starships', $keywords, $filters, $relations),
+                        $match
+                    ),
+                    "vehicles" => $this->attachMatch(
+                        $this->repo->search('vehicles', $keywords, $filters, $relations),
+                        $match
+                    ),
+                ];
+
+                $mixedData = array_filter($mixedData, function ($items) {
+                    return $items instanceof \Illuminate\Support\Collection
+                        ? $items->isNotEmpty()
+                        : !empty($items);
+                });
+
                 return [
                     "entity" => "mixed",
                     "parsed" => $parsed,
-                    "data"   => [
-                        "planets" => $this->attachMatch(
-                            $this->repo->search('planets', $keywords, $filters, $relations),
-                            $match
-                        ),
-                        "films" => $this->attachMatch(
-                            $this->repo->search('films', $keywords, $filters, $relations),
-                            $match
-                        ),
-                        "people" => $this->attachMatch(
-                            $this->repo->search('people', $keywords, $filters, $relations),
-                            $match
-                        ),
-                        "species" => $this->attachMatch(
-                            $this->repo->search('species', $keywords, $filters, $relations),
-                            $match
-                        ),
-                        "starships" => $this->attachMatch(
-                            $this->repo->search('starships', $keywords, $filters, $relations),
-                            $match
-                        ),
-                        "vehicles" => $this->attachMatch(
-                            $this->repo->search('vehicles', $keywords, $filters, $relations),
-                            $match
-                        ),
-                    ]
+                    "data"   => $mixedData
                 ];
             }
         );

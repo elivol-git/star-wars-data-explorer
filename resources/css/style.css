@@ -34,6 +34,7 @@ body {
     display: flex;
     gap: 8px;
     align-items: center;
+    position: relative;
 }
 
 .header-search input {
@@ -44,4 +45,76 @@ body {
     font-size: 14px;
 }
 
+.autocomplete-list {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    border: 1px solid #f5d76e;
+    border-radius: 10px;
+    background: #0f0f0f;
+    z-index: 30;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
 
+.autocomplete-item {
+    width: 100%;
+    border: 0;
+    background: transparent;
+    color: #f5d76e;
+    text-align: left;
+    padding: 8px 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.autocomplete-item + .autocomplete-item {
+    border-top: 1px solid rgba(245, 215, 110, 0.2);
+}
+
+.autocomplete-item:hover,
+.autocomplete-item.active {
+    background: rgba(245, 215, 110, 0.12);
+}
+
+.autocomplete-type {
+    color: rgba(245, 215, 110, 0.75);
+    font-size: 11px;
+    text-transform: uppercase;
+}
+/* =========================
+   MOBILE HEADER FIX
+========================= */
+@media (max-width: 768px) {
+    .header {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .logo {
+        width: 80px;
+    }
+
+    .title {
+        grid-column: 2;
+        margin: 0;
+        font-size: 1.4rem;
+    }
+
+    .header-search {
+        grid-column: 1 / -1; /* 👈 spans full width */
+        margin-left: 0;
+        width: 100%;
+        margin-bottom: 0;
+    }
+
+    .header-search input {
+        width: 100%;
+    }
+}

@@ -30,7 +30,7 @@
 
         <div class="planet-column">
             <div class="column-title">
-                Residents ({{ people.length }})
+                {{ people.length ? `Residents (${people.length})` : 'No residents' }}
             </div>
 
             <ul>
