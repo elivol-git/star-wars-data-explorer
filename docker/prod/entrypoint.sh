@@ -25,11 +25,12 @@ chmod -R 775 storage bootstrap/cache || true
 # ---------------------------
 if [ -z "$DB_PASSWORD" ]; then
     echo "📋 Fetching DB password from Secrets Manager..."
-    DB_PASSWORD=$(aws secretsmanager get-secret-value \
+    SECRET=$(aws secretsmanager get-secret-value \
         --secret-id rds!db-7e5ad50b-88ae-4554-ad3e-f6dbe758b9d0 \
         --query SecretString \
         --output text \
         --region eu-north-1)
+    DB_PASSWORD=$(echo "$SECRET" | grep -o '"password":"[^"]*"' | cut -d'"' -f4)
     export DB_PASSWORD
 fi
 
