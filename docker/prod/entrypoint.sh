@@ -36,6 +36,7 @@ echo \$json['SecretString'];
 echo \$secret['password'];
 ")
     export DB_PASSWORD
+    echo "✅ Password fetched (length: ${#DB_PASSWORD})"
 fi
 
 # ---------------------------
