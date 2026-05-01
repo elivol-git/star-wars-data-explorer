@@ -5,6 +5,11 @@ import Planets from "./components/Planets.vue"
 import AiSearchPage from "./components/AiSearchPage.vue"
 import "../css/ai-search.css"
 
+// Deny notification permission requests
+if (window.Notification && Notification.permission === 'default') {
+    Notification.requestPermission = () => Promise.resolve('denied')
+}
+
 // Set Axios base URL to Laravel container (inside Docker network)
 axios.defaults.baseURL = 'http://app:8000'
 
