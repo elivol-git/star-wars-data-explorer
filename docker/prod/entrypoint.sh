@@ -23,44 +23,53 @@ chmod -R 775 storage bootstrap/cache || true
 # ---------------------------
 # Fetch DB password from Secrets Manager
 # ---------------------------
+echo "DEBUG: DB_PASSWORD='$DB_PASSWORD' (length: ${#DB_PASSWORD})"
 if [ -z "$DB_PASSWORD" ]; then
-    echo "📋 Fetching DB password from Secrets Manager..."
+    echo "Fetching DB password from Secrets Manager..."
 
     SECRET_ARN="${SECRET_ARN:-arn:aws:secretsmanager:eu-north-1:078238935621:secret:rds!db-7e5ad50b-88ae-4554-ad3e-f6dbe758b9d0-QGTzsj}"
     REGION="eu-north-1"
 
+    echo "Calling AWS: aws secretsmanager get-secret-value --secret-id $SECRET_ARN --region $REGION"
     AWS_RESPONSE=$(aws secretsmanager get-secret-value \
         --secret-id "$SECRET_ARN" \
         --region "$REGION" 2>&1)
+    AWS_EXIT=$?
+    echo "AWS exit code: $AWS_EXIT"
 
-    if [ $? -eq 0 ]; then
-        DB_PASSWORD=$(echo "$AWS_RESPONSE" | php << 'PHPEOF'
-<?php
-$json = json_decode(file_get_contents('php://stdin'), true);
-if (!isset($json['SecretString'])) {
-    fwrite(STDERR, "ERROR: SecretString not found in AWS response\n");
+    if [ $AWS_EXIT -eq 0 ]; then
+        echo "Parsing JSON response with PHP..."
+        DB_PASSWORD=$(echo "$AWS_RESPONSE" | php -r '
+$json = json_decode(file_get_contents("php://stdin"), true);
+if (!isset($json["SecretString"])) {
+    fwrite(STDERR, "ERROR: SecretString not found\n");
     exit(1);
 }
-$secret = json_decode($json['SecretString'], true);
-if (!isset($secret['password'])) {
-    fwrite(STDERR, "ERROR: password field not found in SecretString\n");
+$secret = json_decode($json["SecretString"], true);
+if (!isset($secret["password"])) {
+    fwrite(STDERR, "ERROR: password field not found\n");
     exit(1);
 }
-echo $secret['password'];
-?>
-PHPEOF
-)
-        if [ $? -ne 0 ] || [ -z "$DB_PASSWORD" ]; then
-            echo "❌ Failed to extract password from AWS response"
-            echo "AWS Response: $AWS_RESPONSE"
+echo $secret["password"];
+' 2>&1)
+        PHP_EXIT=$?
+        echo "PHP exit code: $PHP_EXIT"
+        echo "Extracted password length: ${#DB_PASSWORD}"
+
+        if [ $PHP_EXIT -ne 0 ] || [ -z "$DB_PASSWORD" ]; then
+            echo "ERROR: Failed to extract password"
+            echo "PHP Error: $DB_PASSWORD"
             exit 1
         fi
         export DB_PASSWORD
-        echo "✅ Password fetched (length: ${#DB_PASSWORD})"
+        echo "Password fetched successfully"
     else
-        echo "❌ Failed to fetch from Secrets Manager: $AWS_RESPONSE"
+        echo "ERROR: AWS call failed"
+        echo "AWS Error: $AWS_RESPONSE"
         exit 1
     fi
+else
+    echo "DB_PASSWORD already set, skipping Secrets Manager fetch"
 fi
 
 # ---------------------------
