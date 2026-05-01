@@ -45,7 +45,10 @@ try {
         'mysql:host=' . getenv('DB_HOST') . ';dbname=' . getenv('DB_DATABASE') . ';charset=utf8mb4',
         getenv('DB_USERNAME'),
         getenv('DB_PASSWORD'),
-        [PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION]
+        [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false
+        ]
     );
     exit(0);
 } catch (Throwable \$e) {
