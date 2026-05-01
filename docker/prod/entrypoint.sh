@@ -31,11 +31,18 @@ if [ -z "$DB_PASSWORD" ]; then
     REGION="eu-north-1"
 
     echo "Calling AWS: aws secretsmanager get-secret-value --secret-id $SECRET_ARN --region $REGION"
-    AWS_RESPONSE=$(aws secretsmanager get-secret-value \
+    timeout 10 aws secretsmanager get-secret-value \
         --secret-id "$SECRET_ARN" \
-        --region "$REGION" 2>&1)
+        --region "$REGION" > /tmp/aws_response.json 2>&1
     AWS_EXIT=$?
     echo "AWS exit code: $AWS_EXIT"
+
+    if [ $AWS_EXIT -eq 124 ]; then
+        echo "ERROR: AWS call timed out (10s)"
+        exit 1
+    fi
+
+    AWS_RESPONSE=$(cat /tmp/aws_response.json)
 
     if [ $AWS_EXIT -eq 0 ]; then
         echo "Parsing JSON response with PHP..."

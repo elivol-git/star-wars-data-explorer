@@ -5,7 +5,8 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo_mysql zip pcntl \
     && pecl install redis \
     && docker-php-ext-enable redis \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /root/.aws
 
 WORKDIR /var/www
 
