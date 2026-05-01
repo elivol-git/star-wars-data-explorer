@@ -25,12 +25,16 @@ chmod -R 775 storage bootstrap/cache || true
 # ---------------------------
 if [ -z "$DB_PASSWORD" ]; then
     echo "📋 Fetching DB password from Secrets Manager..."
-    SECRET=$(aws secretsmanager get-secret-value \
+    DB_PASSWORD=$(aws secretsmanager get-secret-value \
         --secret-id rds!db-7e5ad50b-88ae-4554-ad3e-f6dbe758b9d0 \
-        --query SecretString \
-        --output text \
-        --region eu-north-1)
-    DB_PASSWORD=$(echo "$SECRET" | sed -n 's/.*"password":"\([^"]*\)".*/\1/p')
+        --region eu-north-1 \
+        | php -r "
+\$json = json_decode(file_get_contents('php://stdin'), true);
+echo \$json['SecretString'];
+" | php -r "
+\$secret = json_decode(file_get_contents('php://stdin'), true);
+echo \$secret['password'];
+")
     export DB_PASSWORD
 fi
 
