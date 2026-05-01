@@ -23,20 +23,43 @@ chmod -R 775 storage bootstrap/cache || true
 # ---------------------------
 # Fetch DB password from Secrets Manager
 # ---------------------------
-echo "DEBUG: Checking DB_PASSWORD. Current value: '$DB_PASSWORD' (length: ${#DB_PASSWORD})"
 if [ -z "$DB_PASSWORD" ]; then
     echo "📋 Fetching DB password from Secrets Manager..."
-    echo "DEBUG: DB_PASSWORD is empty"
-    DB_PASSWORD=$(aws secretsmanager get-secret-value \
-        --secret-id rds!db-7e5ad50b-88ae-4554-ad3e-f6dbe758b9d0 \
-        --region eu-north-1 2>&1)
-    echo "DEBUG: AWS response: $DB_PASSWORD"
+
+    SECRET_ARN="${SECRET_ARN:-arn:aws:secretsmanager:eu-north-1:078238935621:secret:rds!db-7e5ad50b-88ae-4554-ad3e-f6dbe758b9d0-QGTzsj}"
+    REGION="eu-north-1"
+
+    AWS_RESPONSE=$(aws secretsmanager get-secret-value \
+        --secret-id "$SECRET_ARN" \
+        --region "$REGION" 2>&1)
+
     if [ $? -eq 0 ]; then
-        DB_PASSWORD=$(echo "$DB_PASSWORD" | php -r "\$json = json_decode(file_get_contents('php://stdin'), true); echo \$json['SecretString'];" | php -r "\$secret = json_decode(file_get_contents('php://stdin'), true); echo \$secret['password'];")
+        DB_PASSWORD=$(echo "$AWS_RESPONSE" | php << 'PHPEOF'
+<?php
+$json = json_decode(file_get_contents('php://stdin'), true);
+if (!isset($json['SecretString'])) {
+    fwrite(STDERR, "ERROR: SecretString not found in AWS response\n");
+    exit(1);
+}
+$secret = json_decode($json['SecretString'], true);
+if (!isset($secret['password'])) {
+    fwrite(STDERR, "ERROR: password field not found in SecretString\n");
+    exit(1);
+}
+echo $secret['password'];
+?>
+PHPEOF
+)
+        if [ $? -ne 0 ] || [ -z "$DB_PASSWORD" ]; then
+            echo "❌ Failed to extract password from AWS response"
+            echo "AWS Response: $AWS_RESPONSE"
+            exit 1
+        fi
         export DB_PASSWORD
         echo "✅ Password fetched (length: ${#DB_PASSWORD})"
     else
-        echo "❌ Failed to fetch password"
+        echo "❌ Failed to fetch from Secrets Manager: $AWS_RESPONSE"
+        exit 1
     fi
 fi
 
