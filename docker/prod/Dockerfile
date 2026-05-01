@@ -1,7 +1,7 @@
 FROM php:8.3-fpm
 
 RUN apt-get update && apt-get install -y \
-    git unzip curl libzip-dev zip nginx supervisor awscli mariadb-client \
+    git unzip curl libzip-dev zip nginx supervisor awscli mariadb-client nodejs npm \
     && docker-php-ext-install pdo_mysql zip pcntl \
     && pecl install redis \
     && docker-php-ext-enable redis \
@@ -15,6 +15,8 @@ COPY . .
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+RUN npm ci && npm run build
 
 RUN mkdir -p storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
