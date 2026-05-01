@@ -23,6 +23,7 @@ chmod -R 775 storage bootstrap/cache || true
 # ---------------------------
 # Fetch DB password from Secrets Manager
 # ---------------------------
+echo "DEBUG: Checking DB_PASSWORD. Current value: '$DB_PASSWORD' (length: ${#DB_PASSWORD})"
 if [ -z "$DB_PASSWORD" ]; then
     echo "📋 Fetching DB password from Secrets Manager..."
     echo "DEBUG: DB_PASSWORD is empty"
