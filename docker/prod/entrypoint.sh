@@ -30,7 +30,7 @@ if [ -z "$DB_PASSWORD" ]; then
         --query SecretString \
         --output text \
         --region eu-north-1)
-    DB_PASSWORD=$(echo "$SECRET" | grep -o '"password":"[^"]*"' | cut -d'"' -f4)
+    DB_PASSWORD=$(echo "$SECRET" | sed -n 's/.*"password":"\([^"]*\)".*/\1/p')
     export DB_PASSWORD
 fi
 
