@@ -25,18 +25,18 @@ chmod -R 775 storage bootstrap/cache || true
 # ---------------------------
 if [ -z "$DB_PASSWORD" ]; then
     echo "📋 Fetching DB password from Secrets Manager..."
+    echo "DEBUG: DB_PASSWORD is empty"
     DB_PASSWORD=$(aws secretsmanager get-secret-value \
         --secret-id rds!db-7e5ad50b-88ae-4554-ad3e-f6dbe758b9d0 \
-        --region eu-north-1 \
-        | php -r "
-\$json = json_decode(file_get_contents('php://stdin'), true);
-echo \$json['SecretString'];
-" | php -r "
-\$secret = json_decode(file_get_contents('php://stdin'), true);
-echo \$secret['password'];
-")
-    export DB_PASSWORD
-    echo "✅ Password fetched (length: ${#DB_PASSWORD})"
+        --region eu-north-1 2>&1)
+    echo "DEBUG: AWS response: $DB_PASSWORD"
+    if [ $? -eq 0 ]; then
+        DB_PASSWORD=$(echo "$DB_PASSWORD" | php -r "\$json = json_decode(file_get_contents('php://stdin'), true); echo \$json['SecretString'];" | php -r "\$secret = json_decode(file_get_contents('php://stdin'), true); echo \$secret['password'];")
+        export DB_PASSWORD
+        echo "✅ Password fetched (length: ${#DB_PASSWORD})"
+    else
+        echo "❌ Failed to fetch password"
+    fi
 fi
 
 # ---------------------------
