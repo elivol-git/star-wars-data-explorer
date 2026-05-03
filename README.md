@@ -311,7 +311,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 ```bash
 cd /mnt/c/projects/star-wars-data-explorer
 rsync -avz --exclude=node_modules   -e "ssh -i ~/.ssh/aws-starwars.pem"   ./ ubuntu@16.171.145.213:/home/ubuntu/starwars
-ssh -i ~/.ssh/aws-starwars.pem ubuntu@16.171.145.213
+ssh -t -i ~/.ssh/aws-starwars.pem ubuntu@16.171.145.213 'cd ~/starwars && exec bash'
 docker compose -f docker-compose.yml -f docker-compose.prod.yml down
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
