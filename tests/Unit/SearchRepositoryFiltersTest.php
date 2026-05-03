@@ -4,6 +4,11 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use App\Services\Llm\Search\StarWarsSearchRepository;
+use App\Models\Planet;
+use App\Models\Person;
+use App\Models\Starship;
+use App\Models\Vehicle;
+use App\Models\Species;
 
 class SearchRepositoryFiltersTest extends TestCase
 {
@@ -13,6 +18,27 @@ class SearchRepositoryFiltersTest extends TestCase
     {
         parent::setUp();
         $this->repository = $this->app->make(StarWarsSearchRepository::class);
+
+        // Create test planets
+        Planet::factory()->create(['name' => 'Tatooine', 'population' => 0, 'diameter' => 10465, 'orbital_period' => 304.65, 'rotation_period' => 23.93, 'surface_water' => 1, 'climate' => 'arid', 'terrain' => 'desert']);
+        Planet::factory()->create(['name' => 'Naboo', 'population' => 5000000, 'diameter' => 12120, 'orbital_period' => 312, 'rotation_period' => 26, 'surface_water' => 28, 'climate' => 'temperate', 'terrain' => 'grassy']);
+        Planet::factory()->create(['name' => 'Dagoba', 'population' => null, 'diameter' => 8500, 'orbital_period' => 350, 'rotation_period' => 25, 'surface_water' => 100, 'climate' => 'murky', 'terrain' => 'swamp, jungle']);
+
+        // Create test people
+        Person::factory()->create(['name' => 'Luke Skywalker', 'height' => 172, 'mass' => 77]);
+        Person::factory()->create(['name' => 'Yoda', 'height' => 66, 'mass' => 17]);
+
+        // Create test starships
+        Starship::factory()->create(['name' => 'Millennium Falcon', 'length' => 34.37, 'crew' => '4 or more', 'starship_class' => 'Light transport']);
+        Starship::factory()->create(['name' => 'Star Destroyer', 'length' => 1600, 'crew' => '9700', 'starship_class' => 'Star Destroyer']);
+
+        // Create test vehicles
+        Vehicle::factory()->create(['name' => 'Sand Crawler', 'length' => 36.8, 'crew' => '46', 'vehicle_class' => 'wheeled']);
+        Vehicle::factory()->create(['name' => 'Speeder', 'length' => 5, 'crew' => '1', 'vehicle_class' => 'repulsorcraft']);
+
+        // Create test species
+        Species::factory()->create(['name' => 'Human', 'classification' => 'mammal', 'language' => 'Galactic Basic', 'average_lifespan' => 120]);
+        Species::factory()->create(['name' => 'Yoda\'s species', 'classification' => 'amphibian', 'language' => 'Galactic Basic', 'average_lifespan' => 900]);
     }
 
     // PLANET FILTERS

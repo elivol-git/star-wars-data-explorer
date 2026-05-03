@@ -213,6 +213,9 @@ class StarWarsAiSearchService
                 // FILM
                 if (!empty($match['film']) && $like($film->title, $match['film'])) {
                     $matchData = ['film' => $film];
+                    if (!empty($match['property'])) {
+                        $matchData['film_property_value'] = $film->{$match['property']} ?? null;
+                    }
                     break;
                 }
             }
@@ -292,17 +295,6 @@ class StarWarsAiSearchService
 
             if (!empty($match['property'])) {
                 $matchData['property'] = $match['property'];
-
-                // If this result has people, indicate which properties they have
-                if (!empty($item->people) && isset($matchData['people'])) {
-                    $property = $match['property'];
-                    foreach ($matchData['people'] as &$person) {
-                        if (isset($person[$property])) {
-                            $person['matched_property'] = $property;
-                            $person['property_value'] = $person[$property];
-                        }
-                    }
-                }
             }
 
             /*
