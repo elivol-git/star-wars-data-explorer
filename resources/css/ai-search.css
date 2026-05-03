@@ -108,6 +108,11 @@
     font-size: 12px;
 }
 
+/* AI Results container */
+.ai-results {
+    width: 100%;
+}
+
 /* Group section (for mixed results) */
 .group {
     margin-top: 14px;
