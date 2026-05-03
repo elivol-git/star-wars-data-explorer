@@ -1,7 +1,8 @@
 services:
     app:
         build:
-            context: .
+            dockerfile: docker/dev/Dockerfile
+        container_name: app
         volumes:
             - .:/var/www
         networks:
@@ -9,7 +10,17 @@ services:
 
     nginx:
         image: nginx:latest
+        container_name: nginx
+        ports:
+            - "80:80"
+            - "443:443"
+        volumes:
+            - ./docker/dev/nginx.conf:/etc/nginx/conf.d/default.conf
+            - .:/var/www:ro
+            - ./docker/ssl:/etc/nginx/ssl:ro
         networks:
+            - app
+        depends_on:
             - app
 
     db:
@@ -34,3 +45,4 @@ networks:
 
 volumes:
     dbdata:
+    appdata:
