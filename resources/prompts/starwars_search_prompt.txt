@@ -257,6 +257,55 @@ Output:
 
 
 
+NUMERIC FILTER EXAMPLE
+
+User:
+planets with population less than 300
+
+Output:
+
+{
+"entity":"planets",
+"keywords":[],
+"filters":{
+"population":"< 300"
+},
+"relations":{},
+"match":{
+"property":"population"
+}
+}
+
+User:
+planets with population equal to 0
+
+Output:
+
+{
+"entity":"planets",
+"keywords":[],
+"filters":{
+"population":"= 0"
+},
+"relations":{},
+"match":{
+"property":"population"
+}
+}
+
+NUMERIC FILTER RULES
+
+For numeric columns (population, diameter, orbital_period, rotation_period, height, mass, cost_in_credits, length, crew, passengers, cargo_capacity, average_height, average_lifespan, hyperdrive_rating), always include the comparison operator:
+
+Supported operators:
+= (equals)
+< (less than)
+> (greater than)
+<= (less than or equal)
+>= (greater than or equal)
+
+Format: "operator value" (e.g., "< 300", "= 0", ">= 1000")
+
 PROPERTY FILTER EXAMPLE
 
 User:
