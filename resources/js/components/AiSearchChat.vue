@@ -24,7 +24,7 @@
                         {{ group.type }}
                     </h2>
 
-                    <div class="grid">
+                    <div class="planet-grid">
 
                         <!-- PLANETS -->
                         <template

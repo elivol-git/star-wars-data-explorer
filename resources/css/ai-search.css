@@ -222,9 +222,12 @@
     color: #4b5563;
 }
 .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-    gap: 1.5rem;
+    display: grid !important;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)) !important;
+    gap: 1.5rem !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
 }
 .highlight {
     color: #ffd700;
