@@ -69,7 +69,8 @@ fi
 docker run --rm --network host -e DB_HOST=planets.cn2eau4c0ak7.eu-north-1.rds.amazonaws.com -e DB_PORT=3306 \
   php:8.3-cli sh -lc 'php -r "$h=getenv(\"DB_HOST\");$p=(int)getenv(\"DB_PORT\");$s=@fsockopen($h,$p,$e,$es,8); if($s){echo \"DB TCP OK\n\"; fclose($s);} else {fwrite(STDERR, \"DB TCP FAIL: $e $es\n\"); exit(1);} "'
 
-DB_PASSWORD="\$DB_PASSWORD" docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+DB_PASSWORD="\$DB_PASSWORD" docker compose -f docker-compose.yml -f docker-compose.prod.yml down && \
+  DB_PASSWORD="\$DB_PASSWORD" docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
 docker logs planets_app --tail 80
@@ -78,4 +79,5 @@ docker logs planets_nginx --tail 80
 docker exec planets_app php artisan config:clear
 docker exec planets_app php artisan cache:clear
 docker exec planets_app php artisan migrate --force
+docker exec planets_app php artisan swapi:sync
 EOF
