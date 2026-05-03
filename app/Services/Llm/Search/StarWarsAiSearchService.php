@@ -65,6 +65,8 @@ class StarWarsAiSearchService
                         $planets = $this->extractPlanetsFromPeople($data);
                         $this->repo->loadPopupRelations('planets', $planets);
 
+                        $planets = $this->attachMatchingPeople($planets, $data);
+
                         return [
                             "entity" => "planets",
                             "parsed" => $parsed,
@@ -290,6 +292,17 @@ class StarWarsAiSearchService
 
             if (!empty($match['property'])) {
                 $matchData['property'] = $match['property'];
+
+                // If this result has people, indicate which properties they have
+                if (!empty($item->people) && isset($matchData['people'])) {
+                    $property = $match['property'];
+                    foreach ($matchData['people'] as &$person) {
+                        if (isset($person[$property])) {
+                            $person['matched_property'] = $property;
+                            $person['property_value'] = $person[$property];
+                        }
+                    }
+                }
             }
 
             /*
@@ -299,10 +312,43 @@ class StarWarsAiSearchService
             */
 
             if (!empty($matchData)) {
-                $item->setAttribute('match', $matchData);
+                $existingMatch = $item->getAttribute('match') ?? [];
+                $mergedMatch = array_merge($existingMatch, $matchData);
+                $item->setAttribute('match', $mergedMatch);
             }
 
             return $item;
+        });
+    }
+
+    private function attachMatchingPeople(Collection $planets, Collection $people): Collection
+    {
+        $peopleById = $people->keyBy('homeworld_id');
+
+        return $planets->map(function ($planet) use ($peopleById) {
+            if (isset($peopleById[$planet->id])) {
+                $person = $peopleById[$planet->id];
+                if (!$planet->getAttribute('match')) {
+                    $planet->setAttribute('match', []);
+                }
+                $match = $planet->getAttribute('match');
+                if (!isset($match['people'])) {
+                    $match['people'] = [];
+                }
+                $match['people'][] = [
+                    'id' => $person->id,
+                    'name' => $person->name,
+                    'skin_color' => $person->skin_color ?? null,
+                    'hair_color' => $person->hair_color ?? null,
+                    'eye_color' => $person->eye_color ?? null,
+                    'height' => $person->height ?? null,
+                    'mass' => $person->mass ?? null,
+                    'gender' => $person->gender ?? null
+                ];
+                $planet->setAttribute('match', $match);
+            }
+
+            return $planet;
         });
     }
 
