@@ -47,7 +47,10 @@ class LlmSearchService
 
         Log::info("Raw LLM response", ['response' => $content]);
 
-        return $this->extractJson($content);
+        $parsed = $this->extractJson($content);
+
+        // Post-process: extract filters from keywords
+        return $this->extractFiltersFromKeywords($parsed);
     }
 
     private function extractJson(string $content): array
@@ -114,6 +117,45 @@ class LlmSearchService
         return in_array($entity, $allowed, true)
             ? $entity
             : 'mixed';
+    }
+
+    private function extractFiltersFromKeywords(array $parsed): array
+    {
+        $numericFields = ['population', 'diameter', 'rotation_period', 'orbital_period', 'height', 'mass', 'cost_in_credits', 'length', 'crew', 'passengers', 'cargo_capacity', 'average_height', 'average_lifespan', 'hyperdrive_rating'];
+
+        $keywords = $parsed['keywords'] ?? [];
+        $filters = $parsed['filters'] ?? [];
+
+        // Check if any keyword contains a numeric filter pattern
+        foreach ($keywords as $idx => $keyword) {
+            $words = preg_split('/\s+/', trim($keyword), -1, PREG_SPLIT_NO_EMPTY);
+
+            for ($i = 0; $i < count($words); $i++) {
+                $word = strtolower($words[$i]);
+                if (in_array($word, $numericFields, true) && $i + 3 < count($words)) {
+                    $operator = strtolower($words[$i + 1]);
+
+                    if ($operator === 'less' && strtolower($words[$i + 2]) === 'than') {
+                        $filters[$word] = '< ' . $words[$i + 3];
+                        unset($keywords[$idx]);
+                        break;
+                    } elseif ($operator === 'greater' && strtolower($words[$i + 2]) === 'than') {
+                        $filters[$word] = '> ' . $words[$i + 3];
+                        unset($keywords[$idx]);
+                        break;
+                    } elseif ($operator === 'equal' && strtolower($words[$i + 2]) === 'to') {
+                        $filters[$word] = '= ' . $words[$i + 3];
+                        unset($keywords[$idx]);
+                        break;
+                    }
+                }
+            }
+        }
+
+        $parsed['keywords'] = array_values($keywords);
+        $parsed['filters'] = $filters;
+
+        return $parsed;
     }
 
     private function fallback(string $text): array
