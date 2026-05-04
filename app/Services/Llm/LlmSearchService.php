@@ -122,24 +122,26 @@ class LlmSearchService
     private function extractFiltersFromKeywords(array $parsed): array
     {
         $numericFields = ['population', 'diameter', 'rotation_period', 'orbital_period', 'height', 'mass', 'cost_in_credits', 'length', 'crew', 'passengers', 'cargo_capacity', 'average_height', 'average_lifespan', 'hyperdrive_rating'];
+        $textFields = ['skin_color', 'hair_color', 'eye_color', 'gender', 'climate', 'terrain', 'gravity', 'classification', 'language', 'designation', 'birth_year', 'name', 'title', 'director', 'producer', 'manufacturer', 'model'];
+        $allFields = array_merge($numericFields, $textFields);
 
         $keywords = $parsed['keywords'] ?? [];
         $filters = $parsed['filters'] ?? [];
         $cleanedKeywords = [];
 
-        // Check if any keyword contains a numeric filter pattern
+        // Check if any keyword contains a filter pattern
         foreach ($keywords as $keyword) {
             $words = preg_split('/\s+/', trim($keyword), -1, PREG_SPLIT_NO_EMPTY);
             $filterFound = false;
 
-            // Simple check: if keyword contains a numeric field, assume it has a filter
+            // Simple check: if keyword contains a known field, assume it has a filter
             foreach ($words as $word) {
-                if (in_array(strtolower($word), $numericFields, true)) {
-                    // This keyword has a numeric field, so it likely contains a filter
-                    // Don't add it to cleaned keywords
+                if (in_array(strtolower($word), $allFields, true)) {
                     $filterFound = true;
                     break;
                 }
+                // Check compound: "skin color" → "skin_color"
+                // (handled by fallback parser; here we just drop it)
             }
 
             // Only keep keyword if it doesn't contain a numeric field
@@ -175,6 +177,10 @@ class LlmSearchService
 
         $numericFields = ['population', 'diameter', 'rotation_period', 'orbital_period', 'height', 'mass', 'cost_in_credits', 'length', 'crew', 'passengers', 'cargo_capacity', 'average_height', 'average_lifespan', 'hyperdrive_rating'];
 
+        $textFields = ['skin_color', 'hair_color', 'eye_color', 'gender', 'climate', 'terrain', 'gravity', 'classification', 'language', 'designation', 'birth_year', 'name', 'title', 'director', 'producer', 'manufacturer', 'model'];
+
+        $allFields = array_merge($numericFields, $textFields);
+
         $words = preg_split('/\s+/', trim($text), -1, PREG_SPLIT_NO_EMPTY);
         $filters = [];
 
@@ -188,11 +194,23 @@ class LlmSearchService
             $fieldWords = 1; // how many words the field name occupies
             if (isset($words[$i + 1])) {
                 $potentialCompound = $word . '_' . strtolower($words[$i + 1]);
-                if (in_array($potentialCompound, $numericFields, true)) {
+                if (in_array($potentialCompound, $allFields, true)) {
                     $word = $potentialCompound;
                     $fieldWords = 2;
                     $i++; // point to the second word of the compound
                 }
+            }
+
+            // Text field with "is" operator: "SKIN COLOR is light"
+            if (in_array($word, $textFields, true)) {
+                if (isset($words[$i + 1]) && strtolower($words[$i + 1]) === 'is' && isset($words[$i + 2])) {
+                    $filters[$word] = $words[$i + 2]; // plain string → repository uses LIKE
+                    array_splice($words, $start, $fieldWords + 2);
+                    $i = $start;
+                    continue;
+                }
+                $i++;
+                continue;
             }
 
             if (in_array($word, $numericFields, true)) {
@@ -267,6 +285,21 @@ class LlmSearchService
                 'diameter' => 'planets',
                 'rotation_period' => 'planets',
                 'orbital_period' => 'planets',
+                'climate' => 'planets',
+                'terrain' => 'planets',
+                'gravity' => 'planets',
+                'skin_color' => 'people',
+                'hair_color' => 'people',
+                'eye_color' => 'people',
+                'gender' => 'people',
+                'birth_year' => 'people',
+                'height' => 'people',
+                'mass' => 'people',
+                'classification' => 'species',
+                'language' => 'species',
+                'designation' => 'species',
+                'average_height' => 'species',
+                'average_lifespan' => 'species',
             ];
             if (isset($fieldToEntity[$filterField])) {
                 $entity = $fieldToEntity[$filterField];
