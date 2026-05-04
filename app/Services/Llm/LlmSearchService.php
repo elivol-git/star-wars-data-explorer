@@ -134,8 +134,8 @@ class LlmSearchService
 
             for ($i = 0; $i < count($words); $i++) {
                 $word = strtolower($words[$i]);
-                // Need at least 4 words: field, operator, connector, value
-                if (in_array($word, $numericFields, true) && $i + 3 < count($words)) {
+                // Check if we can access all 4 required words
+                if (in_array($word, $numericFields, true) && isset($words[$i + 3])) {
                     $operator = strtolower($words[$i + 1]);
 
                     if ($operator === 'less' && strtolower($words[$i + 2]) === 'than') {
@@ -196,7 +196,7 @@ class LlmSearchService
             $word = strtolower($words[$i]);
             if (in_array($word, $numericFields, true)) {
                 // Found a numeric field, look for operator and value
-                if ($i + 3 < count($words)) {
+                if (isset($words[$i + 3])) {
                     $operator = strtolower($words[$i + 1]);
 
                     // Check for "less than", "greater than", etc.
