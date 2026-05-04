@@ -132,29 +132,17 @@ class LlmSearchService
             $words = preg_split('/\s+/', trim($keyword), -1, PREG_SPLIT_NO_EMPTY);
             $filterFound = false;
 
-            for ($i = 0; $i < count($words); $i++) {
-                $word = strtolower($words[$i]);
-                // Check if we can access all 4 required words
-                if (in_array($word, $numericFields, true) && isset($words[$i + 3])) {
-                    $operator = strtolower($words[$i + 1]);
-
-                    if ($operator === 'less' && strtolower($words[$i + 2]) === 'than') {
-                        $filters[$word] = '< ' . $words[$i + 3];
-                        $filterFound = true;
-                        break;
-                    } elseif ($operator === 'greater' && strtolower($words[$i + 2]) === 'than') {
-                        $filters[$word] = '> ' . $words[$i + 3];
-                        $filterFound = true;
-                        break;
-                    } elseif ($operator === 'equal' && strtolower($words[$i + 2]) === 'to') {
-                        $filters[$word] = '= ' . $words[$i + 3];
-                        $filterFound = true;
-                        break;
-                    }
+            // Simple check: if keyword contains a numeric field, assume it has a filter
+            foreach ($words as $word) {
+                if (in_array(strtolower($word), $numericFields, true)) {
+                    // This keyword has a numeric field, so it likely contains a filter
+                    // Don't add it to cleaned keywords
+                    $filterFound = true;
+                    break;
                 }
             }
 
-            // Only keep keyword if no filter was extracted from it
+            // Only keep keyword if it doesn't contain a numeric field
             if (!$filterFound) {
                 $cleanedKeywords[] = $keyword;
             }
