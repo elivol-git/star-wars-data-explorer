@@ -120,7 +120,6 @@ class LlmSearchService
     {
         Log::warning("Fallback parser used", ['text' => $text]);
 
-        $entities = ['planets', 'films', 'people', 'species', 'starships', 'vehicles'];
         $entityMap = [
             'planet' => 'planets',
             'planets' => 'planets',
@@ -136,30 +135,78 @@ class LlmSearchService
             'vehicles' => 'vehicles',
         ];
 
-        $words = preg_split('/\s+/', trim($text));
+        $numericFields = ['population', 'diameter', 'rotation_period', 'orbital_period', 'height', 'mass', 'cost_in_credits', 'length', 'crew', 'passengers', 'cargo_capacity', 'average_height', 'average_lifespan', 'hyperdrive_rating'];
 
-        // Check if first word is an entity type (singular or plural)
+        $words = preg_split('/\s+/', trim($text), -1, PREG_SPLIT_NO_EMPTY);
+        $filters = [];
+
+        // Detect numeric filters: "property operator value"
+        for ($i = 0; $i < count($words); $i++) {
+            $word = strtolower($words[$i]);
+            if (in_array($word, $numericFields, true)) {
+                // Found a numeric field, look for operator and value
+                if ($i + 2 < count($words)) {
+                    $operator = strtolower($words[$i + 1]);
+                    $value = $words[$i + 2];
+
+                    // Convert text operators to symbols
+                    $opMap = ['less' => '<', 'greater' => '>', 'equal' => '='];
+
+                    // Check for "less than", "greater than", etc.
+                    if ($operator === 'less' && $i + 3 < count($words) && strtolower($words[$i + 2]) === 'than') {
+                        $filters[$word] = '< ' . $words[$i + 3];
+                        array_splice($words, $i, 4); // Remove processed words
+                        $i--; // Adjust index
+                        continue;
+                    } elseif ($operator === 'greater' && $i + 3 < count($words) && strtolower($words[$i + 2]) === 'than') {
+                        $filters[$word] = '> ' . $words[$i + 3];
+                        array_splice($words, $i, 4);
+                        $i--;
+                        continue;
+                    } elseif ($operator === 'equal' && $i + 3 < count($words) && strtolower($words[$i + 2]) === 'to') {
+                        $filters[$word] = '= ' . $words[$i + 3];
+                        array_splice($words, $i, 4);
+                        $i--;
+                        continue;
+                    }
+                }
+            }
+        }
+
+        // Remaining words are keywords or entity
+        $keywords = [];
+        $entity = 'mixed';
+
         if (count($words) > 0) {
             $firstWord = strtolower($words[0]);
             if (isset($entityMap[$firstWord])) {
                 $entity = $entityMap[$firstWord];
                 $keywords = array_slice($words, 1);
-                return [
-                    "entity"    => $entity,
-                    "keywords"  => $keywords ?: [$text],
-                    "filters"   => [],
-                    "relations" => [],
-                    "match"     => []
-                ];
+            } else {
+                $keywords = $words;
+            }
+        }
+
+        // Infer entity from filter field if entity is still mixed
+        if ($entity === 'mixed' && !empty($filters)) {
+            $filterField = array_key_first($filters);
+            $fieldToEntity = [
+                'population' => 'planets',
+                'diameter' => 'planets',
+                'rotation_period' => 'planets',
+                'orbital_period' => 'planets',
+            ];
+            if (isset($fieldToEntity[$filterField])) {
+                $entity = $fieldToEntity[$filterField];
             }
         }
 
         return [
-            "entity"    => "mixed",
-            "keywords"  => $text ? [$text] : [],
-            "filters"   => [],
+            "entity"    => $entity,
+            "keywords"  => $keywords ?: ($text ? [$text] : []),
+            "filters"   => $filters,
             "relations" => [],
-            "match"     => []
+            "match"     => !empty($filters) ? ['property' => array_key_first($filters)] : []
         ];
     }
 
