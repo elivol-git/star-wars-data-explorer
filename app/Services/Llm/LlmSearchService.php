@@ -184,9 +184,22 @@ class LlmSearchService
             $word = strtolower($words[$i]);
             if (in_array($word, $numericFields, true)) {
                 // Found a numeric field, look for operator and value
-                if (isset($words[$i + 3])) {
-                    $operator = strtolower($words[$i + 1]);
+                if (!isset($words[$i + 1])) {
+                    $i++;
+                    continue;
+                }
 
+                $operator = strtolower($words[$i + 1]);
+
+                // "is" operator (3 words: field, is, value)
+                if ($operator === 'is' && isset($words[$i + 2])) {
+                    $filters[$word] = '= ' . $words[$i + 2];
+                    array_splice($words, $i, 3);
+                    continue;
+                }
+
+                // Other operators need 4 words minimum
+                if (isset($words[$i + 3])) {
                     // Check for "less than", "greater than", etc.
                     $connector = strtolower($words[$i + 2]);
 
@@ -204,8 +217,8 @@ class LlmSearchService
                         continue;
                     }
 
-                    // Equal operators
-                    if ($operator === 'equal' && $connector === 'to') {
+                    // Equal operators: "equal to", "equals to"
+                    if (in_array($operator, ['equal', 'equals'], true) && $connector === 'to') {
                         $filters[$word] = '= ' . $words[$i + 3];
                         array_splice($words, $i, 4);
                         continue;
