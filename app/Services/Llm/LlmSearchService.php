@@ -188,15 +188,24 @@ class LlmSearchService
                     $operator = strtolower($words[$i + 1]);
 
                     // Check for "less than", "greater than", etc.
-                    if ($operator === 'less' && strtolower($words[$i + 2]) === 'than') {
+                    $connector = strtolower($words[$i + 2]);
+
+                    // Less than operators
+                    if (in_array($operator, ['less', 'smaller'], true) && $connector === 'than') {
                         $filters[$word] = '< ' . $words[$i + 3];
-                        array_splice($words, $i, 4); // Remove processed words
+                        array_splice($words, $i, 4);
                         continue;
-                    } elseif ($operator === 'greater' && strtolower($words[$i + 2]) === 'than') {
+                    }
+
+                    // Greater than operators
+                    if (in_array($operator, ['greater', 'more', 'bigger'], true) && $connector === 'than') {
                         $filters[$word] = '> ' . $words[$i + 3];
                         array_splice($words, $i, 4);
                         continue;
-                    } elseif ($operator === 'equal' && strtolower($words[$i + 2]) === 'to') {
+                    }
+
+                    // Equal operators
+                    if ($operator === 'equal' && $connector === 'to') {
                         $filters[$word] = '= ' . $words[$i + 3];
                         array_splice($words, $i, 4);
                         continue;
