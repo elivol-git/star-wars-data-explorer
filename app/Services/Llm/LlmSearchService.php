@@ -141,36 +141,31 @@ class LlmSearchService
         $filters = [];
 
         // Detect numeric filters: "property operator value"
-        for ($i = 0; $i < count($words); $i++) {
+        $i = 0;
+        while ($i < count($words)) {
             $word = strtolower($words[$i]);
             if (in_array($word, $numericFields, true)) {
                 // Found a numeric field, look for operator and value
-                if ($i + 2 < count($words)) {
+                if ($i + 3 < count($words)) {
                     $operator = strtolower($words[$i + 1]);
-                    $value = $words[$i + 2];
-
-                    // Convert text operators to symbols
-                    $opMap = ['less' => '<', 'greater' => '>', 'equal' => '='];
 
                     // Check for "less than", "greater than", etc.
-                    if ($operator === 'less' && $i + 3 < count($words) && strtolower($words[$i + 2]) === 'than') {
+                    if ($operator === 'less' && strtolower($words[$i + 2]) === 'than') {
                         $filters[$word] = '< ' . $words[$i + 3];
                         array_splice($words, $i, 4); // Remove processed words
-                        $i--; // Adjust index
                         continue;
-                    } elseif ($operator === 'greater' && $i + 3 < count($words) && strtolower($words[$i + 2]) === 'than') {
+                    } elseif ($operator === 'greater' && strtolower($words[$i + 2]) === 'than') {
                         $filters[$word] = '> ' . $words[$i + 3];
                         array_splice($words, $i, 4);
-                        $i--;
                         continue;
-                    } elseif ($operator === 'equal' && $i + 3 < count($words) && strtolower($words[$i + 2]) === 'to') {
+                    } elseif ($operator === 'equal' && strtolower($words[$i + 2]) === 'to') {
                         $filters[$word] = '= ' . $words[$i + 3];
                         array_splice($words, $i, 4);
-                        $i--;
                         continue;
                     }
                 }
             }
+            $i++;
         }
 
         // Remaining words are keywords or entity
