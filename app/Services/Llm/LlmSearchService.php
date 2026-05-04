@@ -182,6 +182,19 @@ class LlmSearchService
         $i = 0;
         while ($i < count($words)) {
             $word = strtolower($words[$i]);
+
+            // Check for compound fields like "rotation_period" sent as "rotation period"
+            $compoundField = null;
+            if (isset($words[$i + 1])) {
+                $potentialCompound = $word . '_' . strtolower($words[$i + 1]);
+                if (in_array($potentialCompound, $numericFields, true)) {
+                    $compoundField = $potentialCompound;
+                    // Skip the next word since we've combined it
+                    $i++; // Will be incremented again at the end of loop
+                    $word = $compoundField;
+                }
+            }
+
             if (in_array($word, $numericFields, true)) {
                 // Found a numeric field, look for operator and value
                 if (!isset($words[$i + 1])) {
