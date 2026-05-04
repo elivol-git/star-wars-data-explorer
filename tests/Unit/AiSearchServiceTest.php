@@ -6,6 +6,7 @@ use Tests\TestCase;
 use App\Services\Llm\Search\StarWarsAiSearchService;
 use App\Services\Llm\Search\StarWarsSearchRepository;
 use App\Services\Llm\LlmSearchService;
+use App\Models\Planet;
 use Mockery;
 
 class AiSearchServiceTest extends TestCase
@@ -21,6 +22,11 @@ class AiSearchServiceTest extends TestCase
         $this->llmService = $this->app->make(LlmSearchService::class);
         $this->repository = $this->app->make(StarWarsSearchRepository::class);
         $this->service = $this->app->make(StarWarsAiSearchService::class);
+
+        // Create test data
+        Planet::factory()->create(['name' => 'Tatooine', 'population' => 0]);
+        Planet::factory()->create(['name' => 'Alderaan', 'population' => 2000000000]);
+        Planet::factory()->create(['name' => 'Naboo', 'population' => 5000000]);
     }
 
     public function test_search_returns_array_with_required_keys()
@@ -70,7 +76,7 @@ class AiSearchServiceTest extends TestCase
     {
         $result = $this->service->search('Star Wars');
 
-        $this->assertIn($result['entity'], ['mixed', 'planets', 'films', 'people', 'species', 'starships', 'vehicles']);
+        $this->assertTrue(in_array($result['entity'], ['mixed', 'planets', 'films', 'people', 'species', 'starships', 'vehicles']));
     }
 
     public function test_search_caches_results()
@@ -94,8 +100,9 @@ class AiSearchServiceTest extends TestCase
     {
         $result = $this->service->search('POPULATION is 0');
 
-        if (!empty($result['data'])) {
-            $first = $result['data'][0];
+        $data = $result['data'] instanceof \Illuminate\Support\Collection ? $result['data'] : collect($result['data']);
+        if ($data->isNotEmpty()) {
+            $first = $data->first();
             // Match context should be attached to items
             $this->assertTrue(is_object($first));
         }

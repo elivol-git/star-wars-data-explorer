@@ -45,6 +45,17 @@ class Kernel extends HttpKernel
         ],
     ];
 
+    public function __construct(\Illuminate\Contracts\Foundation\Application $app, \Illuminate\Routing\Router $router)
+    {
+        parent::__construct($app, $router);
+
+        if ($app->environment('testing')) {
+            $this->middlewareGroups['api'] = [
+                \Illuminate\Routing\Middleware\SubstituteBindings::class,
+            ];
+        }
+    }
+
     /**
      * The application's route middleware.
      *

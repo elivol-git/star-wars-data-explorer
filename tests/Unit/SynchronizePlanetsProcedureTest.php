@@ -9,7 +9,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Mockery;
 use Tests\TestCase;
 use Exception;
@@ -19,7 +18,6 @@ use Psr\Http\Message\StreamInterface;
 
 class SynchronizePlanetsProcedureTest extends TestCase
 {
-    use RefreshDatabase;
 
     protected function tearDown(): void
     {

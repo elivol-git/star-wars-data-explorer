@@ -394,7 +394,7 @@ class StarWarsSearchRepository
     |--------------------------------------------------------------------------
     */
 
-    protected function normalizeFilters(array $filters): array
+    public function normalizeFilters(array $filters): array
     {
         foreach ($filters as $column => $value) {
 
