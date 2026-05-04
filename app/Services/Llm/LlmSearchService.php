@@ -209,6 +209,17 @@ class LlmSearchService
                     $i = $start;
                     continue;
                 }
+                // Implicit equality: "GENDER female" (no operator)
+                if (isset($words[$i + 1])) {
+                    $nextWord = strtolower($words[$i + 1]);
+                    $excluded = array_merge($allFields, array_keys($entityMap), ['is']);
+                    if (!in_array($nextWord, $excluded, true)) {
+                        $filters[$word] = $words[$i + 1];
+                        array_splice($words, $start, $fieldWords + 1);
+                        $i = $start;
+                        continue;
+                    }
+                }
                 $i++;
                 continue;
             }

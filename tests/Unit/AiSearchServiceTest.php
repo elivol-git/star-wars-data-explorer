@@ -41,6 +41,14 @@ class AiSearchServiceTest extends TestCase
         $this->assertArrayHasKey('population', $result['parsed']['filters']);
     }
 
+    public function test_search_parses_text_filter_without_is_operator()
+    {
+        $result = $this->service->search('GENDER female');
+
+        $this->assertArrayHasKey('gender', $result['parsed']['filters']);
+        $this->assertEquals('female', $result['parsed']['filters']['gender']);
+    }
+
     public function test_search_handles_planet_entity()
     {
         $result = $this->service->search('planets with population 0');
