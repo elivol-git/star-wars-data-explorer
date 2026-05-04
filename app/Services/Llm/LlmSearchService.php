@@ -236,7 +236,7 @@ class LlmSearchService
 
         return [
             "entity"    => $entity,
-            "keywords"  => $keywords ?: ($text ? [$text] : []),
+            "keywords"  => $keywords ?: (!empty($filters) ? [] : ($text ? [$text] : [])),
             "filters"   => $filters,
             "relations" => [],
             "match"     => !empty($filters) ? ['property' => array_key_first($filters)] : []
