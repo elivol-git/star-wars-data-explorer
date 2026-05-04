@@ -121,15 +121,31 @@ class LlmSearchService
         Log::warning("Fallback parser used", ['text' => $text]);
 
         $entities = ['planets', 'films', 'people', 'species', 'starships', 'vehicles'];
+        $entityMap = [
+            'planet' => 'planets',
+            'planets' => 'planets',
+            'film' => 'films',
+            'films' => 'films',
+            'person' => 'people',
+            'people' => 'people',
+            'specie' => 'species',
+            'species' => 'species',
+            'starship' => 'starships',
+            'starships' => 'starships',
+            'vehicle' => 'vehicles',
+            'vehicles' => 'vehicles',
+        ];
+
         $words = preg_split('/\s+/', trim($text));
 
-        // Check if first word is an entity type
+        // Check if first word is an entity type (singular or plural)
         if (count($words) > 0) {
             $firstWord = strtolower($words[0]);
-            if (in_array($firstWord, $entities, true)) {
+            if (isset($entityMap[$firstWord])) {
+                $entity = $entityMap[$firstWord];
                 $keywords = array_slice($words, 1);
                 return [
-                    "entity"    => $firstWord,
+                    "entity"    => $entity,
                     "keywords"  => $keywords ?: [$text],
                     "filters"   => [],
                     "relations" => [],
