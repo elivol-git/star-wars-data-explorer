@@ -120,6 +120,24 @@ class LlmSearchService
     {
         Log::warning("Fallback parser used", ['text' => $text]);
 
+        $entities = ['planets', 'films', 'people', 'species', 'starships', 'vehicles'];
+        $words = preg_split('/\s+/', trim($text));
+
+        // Check if first word is an entity type
+        if (count($words) > 0) {
+            $firstWord = strtolower($words[0]);
+            if (in_array($firstWord, $entities, true)) {
+                $keywords = array_slice($words, 1);
+                return [
+                    "entity"    => $firstWord,
+                    "keywords"  => $keywords ?: [$text],
+                    "filters"   => [],
+                    "relations" => [],
+                    "match"     => []
+                ];
+            }
+        }
+
         return [
             "entity"    => "mixed",
             "keywords"  => $text ? [$text] : [],
