@@ -125,34 +125,42 @@ class LlmSearchService
 
         $keywords = $parsed['keywords'] ?? [];
         $filters = $parsed['filters'] ?? [];
+        $cleanedKeywords = [];
 
         // Check if any keyword contains a numeric filter pattern
-        foreach ($keywords as $idx => $keyword) {
+        foreach ($keywords as $keyword) {
             $words = preg_split('/\s+/', trim($keyword), -1, PREG_SPLIT_NO_EMPTY);
+            $filterFound = false;
 
             for ($i = 0; $i < count($words); $i++) {
                 $word = strtolower($words[$i]);
+                // Need at least 4 words: field, operator, connector, value
                 if (in_array($word, $numericFields, true) && $i + 3 < count($words)) {
                     $operator = strtolower($words[$i + 1]);
 
                     if ($operator === 'less' && strtolower($words[$i + 2]) === 'than') {
                         $filters[$word] = '< ' . $words[$i + 3];
-                        unset($keywords[$idx]);
+                        $filterFound = true;
                         break;
                     } elseif ($operator === 'greater' && strtolower($words[$i + 2]) === 'than') {
                         $filters[$word] = '> ' . $words[$i + 3];
-                        unset($keywords[$idx]);
+                        $filterFound = true;
                         break;
                     } elseif ($operator === 'equal' && strtolower($words[$i + 2]) === 'to') {
                         $filters[$word] = '= ' . $words[$i + 3];
-                        unset($keywords[$idx]);
+                        $filterFound = true;
                         break;
                     }
                 }
             }
+
+            // Only keep keyword if no filter was extracted from it
+            if (!$filterFound) {
+                $cleanedKeywords[] = $keyword;
+            }
         }
 
-        $parsed['keywords'] = array_values($keywords);
+        $parsed['keywords'] = $cleanedKeywords;
         $parsed['filters'] = $filters;
 
         return $parsed;
