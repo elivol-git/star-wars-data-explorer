@@ -6,7 +6,11 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git push *)",
-      "Bash(scp *)"
+      "Bash(scp *)",
+      "Bash(docker compose *)",
+      "Bash(docker exec *)",
+      "Bash(curl -k -s \"https://film-planets.test/api/ai-search?q=test\")",
+      "Bash(python3 -c \"import sys,json; r=json.load\\(sys.stdin\\); print\\(f'Filters: {r[\\\\\"parsed\\\\\"][\\\\\"filters\\\\\"]}'\\); print\\(f'Results: {len\\(r[\\\\\"data\\\\\"]\\)} planets'\\); [print\\(f'  {p[\\\\\"name\\\\\"]}: {p[\\\\\"rotation_period\\\\\"]}'\\) for p in r['data'][:3]]\")"
     ]
   }
 }

@@ -181,17 +181,17 @@ class LlmSearchService
         // Detect numeric filters: "property operator value"
         $i = 0;
         while ($i < count($words)) {
+            $start = $i; // track original position for splice
             $word = strtolower($words[$i]);
 
             // Check for compound fields like "rotation_period" sent as "rotation period"
-            $compoundField = null;
+            $fieldWords = 1; // how many words the field name occupies
             if (isset($words[$i + 1])) {
                 $potentialCompound = $word . '_' . strtolower($words[$i + 1]);
                 if (in_array($potentialCompound, $numericFields, true)) {
-                    $compoundField = $potentialCompound;
-                    // Skip the next word since we've combined it
-                    $i++; // Will be incremented again at the end of loop
-                    $word = $compoundField;
+                    $word = $potentialCompound;
+                    $fieldWords = 2;
+                    $i++; // point to the second word of the compound
                 }
             }
 
@@ -204,14 +204,15 @@ class LlmSearchService
 
                 $operator = strtolower($words[$i + 1]);
 
-                // "is" operator (3 words: field, is, value)
+                // "is" operator (field + is + value = fieldWords + 2)
                 if ($operator === 'is' && isset($words[$i + 2])) {
                     $filters[$word] = '= ' . $words[$i + 2];
-                    array_splice($words, $i, 3);
+                    array_splice($words, $start, $fieldWords + 2);
+                    $i = $start;
                     continue;
                 }
 
-                // Other operators need 4 words minimum
+                // Other operators need: field + op + connector + value (fieldWords + 3)
                 if (isset($words[$i + 3])) {
                     // Check for "less than", "greater than", etc.
                     $connector = strtolower($words[$i + 2]);
@@ -219,21 +220,24 @@ class LlmSearchService
                     // Less than operators
                     if (in_array($operator, ['less', 'smaller'], true) && $connector === 'than') {
                         $filters[$word] = '< ' . $words[$i + 3];
-                        array_splice($words, $i, 4);
+                        array_splice($words, $start, $fieldWords + 3);
+                        $i = $start;
                         continue;
                     }
 
                     // Greater than operators
                     if (in_array($operator, ['greater', 'more', 'bigger'], true) && $connector === 'than') {
                         $filters[$word] = '> ' . $words[$i + 3];
-                        array_splice($words, $i, 4);
+                        array_splice($words, $start, $fieldWords + 3);
+                        $i = $start;
                         continue;
                     }
 
                     // Equal operators: "equal to", "equals to"
                     if (in_array($operator, ['equal', 'equals'], true) && $connector === 'to') {
                         $filters[$word] = '= ' . $words[$i + 3];
-                        array_splice($words, $i, 4);
+                        array_splice($words, $start, $fieldWords + 3);
+                        $i = $start;
                         continue;
                     }
                 }
