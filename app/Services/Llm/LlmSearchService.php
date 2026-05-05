@@ -124,32 +124,63 @@ class LlmSearchService
         $numericFields = ['population', 'diameter', 'rotation_period', 'orbital_period', 'height', 'mass', 'cost_in_credits', 'length', 'crew', 'passengers', 'cargo_capacity', 'average_height', 'average_lifespan', 'hyperdrive_rating', 'max_atmosphering_speed', 'MGLT'];
         $textFields = ['skin_color', 'hair_color', 'eye_color', 'gender', 'climate', 'terrain', 'gravity', 'classification', 'language', 'designation', 'birth_year', 'name', 'title', 'director', 'producer', 'manufacturer', 'model', 'vehicle_class', 'starship_class', 'consumables', 'skin_colors', 'hair_colors', 'eye_colors'];
         $allFields = array_merge($numericFields, $textFields);
+        $entityMap = [
+            'planet' => 'planets',
+            'planets' => 'planets',
+            'film' => 'films',
+            'films' => 'films',
+            'person' => 'people',
+            'people' => 'people',
+            'specie' => 'species',
+            'species' => 'species',
+            'starship' => 'starships',
+            'starships' => 'starships',
+            'vehicle' => 'vehicles',
+            'vehicles' => 'vehicles',
+        ];
 
         $keywords = $parsed['keywords'] ?? [];
         $filters = $parsed['filters'] ?? [];
         $cleanedKeywords = [];
+        $entity = $parsed['entity'] ?? 'mixed';
 
-        // Check if any keyword contains a filter pattern
+        // Check if any keyword starts with entity type (e.g., "vehicle TIE bomber" → extract "vehicle")
         foreach ($keywords as $keyword) {
             $words = preg_split('/\s+/', trim($keyword), -1, PREG_SPLIT_NO_EMPTY);
-            $filterFound = false;
 
-            // Simple check: if keyword contains a known field, assume it has a filter
+            if (empty($words)) {
+                continue;
+            }
+
+            $firstWord = strtolower($words[0]);
+
+            // If first word is an entity type and current entity is mixed, extract it
+            if ($entity === 'mixed' && isset($entityMap[$firstWord])) {
+                $entity = $entityMap[$firstWord];
+                // Add remaining words as keywords
+                $remaining = array_slice($words, 1);
+                foreach ($remaining as $word) {
+                    $cleanedKeywords[] = $word;
+                }
+                continue;
+            }
+
+            // Check if keyword contains a filter pattern
+            $filterFound = false;
             foreach ($words as $word) {
                 if (in_array(strtolower($word), $allFields, true)) {
                     $filterFound = true;
                     break;
                 }
-                // Check compound: "skin color" → "skin_color"
-                // (handled by fallback parser; here we just drop it)
             }
 
-            // Only keep keyword if it doesn't contain a numeric field
+            // Only keep keyword if it doesn't contain a field name
             if (!$filterFound) {
                 $cleanedKeywords[] = $keyword;
             }
         }
 
+        $parsed['entity'] = $entity;
         $parsed['keywords'] = $cleanedKeywords;
         $parsed['filters'] = $filters;
 
