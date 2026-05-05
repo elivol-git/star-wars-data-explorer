@@ -305,6 +305,7 @@ sudo systemctl start redis
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+
 ```
 
 ### Production Docker run:

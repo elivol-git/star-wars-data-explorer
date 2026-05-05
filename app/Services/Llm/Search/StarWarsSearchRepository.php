@@ -400,7 +400,7 @@ class StarWarsSearchRepository
 
             if (is_string($value)) {
 
-                if (preg_match('/^(<=|>=|<|>|=)\s*(\d+)/', $value, $m)) {
+                if (preg_match('/^(<=|>=|<|>|=)\s*([\d.]+)/', $value, $m)) {
 
                     $filters[$column] = [
                         'operator' => $m[1],

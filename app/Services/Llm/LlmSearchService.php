@@ -121,8 +121,8 @@ class LlmSearchService
 
     private function extractFiltersFromKeywords(array $parsed): array
     {
-        $numericFields = ['population', 'diameter', 'rotation_period', 'orbital_period', 'height', 'mass', 'cost_in_credits', 'length', 'crew', 'passengers', 'cargo_capacity', 'average_height', 'average_lifespan', 'hyperdrive_rating'];
-        $textFields = ['skin_color', 'hair_color', 'eye_color', 'gender', 'climate', 'terrain', 'gravity', 'classification', 'language', 'designation', 'birth_year', 'name', 'title', 'director', 'producer', 'manufacturer', 'model'];
+        $numericFields = ['population', 'diameter', 'rotation_period', 'orbital_period', 'height', 'mass', 'cost_in_credits', 'length', 'crew', 'passengers', 'cargo_capacity', 'average_height', 'average_lifespan', 'hyperdrive_rating', 'max_atmosphering_speed', 'MGLT'];
+        $textFields = ['skin_color', 'hair_color', 'eye_color', 'gender', 'climate', 'terrain', 'gravity', 'classification', 'language', 'designation', 'birth_year', 'name', 'title', 'director', 'producer', 'manufacturer', 'model', 'vehicle_class', 'starship_class', 'consumables', 'skin_colors', 'hair_colors', 'eye_colors'];
         $allFields = array_merge($numericFields, $textFields);
 
         $keywords = $parsed['keywords'] ?? [];
@@ -175,9 +175,9 @@ class LlmSearchService
             'vehicles' => 'vehicles',
         ];
 
-        $numericFields = ['population', 'diameter', 'rotation_period', 'orbital_period', 'height', 'mass', 'cost_in_credits', 'length', 'crew', 'passengers', 'cargo_capacity', 'average_height', 'average_lifespan', 'hyperdrive_rating'];
+        $numericFields = ['population', 'diameter', 'rotation_period', 'orbital_period', 'height', 'mass', 'cost_in_credits', 'length', 'crew', 'passengers', 'cargo_capacity', 'average_height', 'average_lifespan', 'hyperdrive_rating', 'max_atmosphering_speed', 'MGLT'];
 
-        $textFields = ['skin_color', 'hair_color', 'eye_color', 'gender', 'climate', 'terrain', 'gravity', 'classification', 'language', 'designation', 'birth_year', 'name', 'title', 'director', 'producer', 'manufacturer', 'model'];
+        $textFields = ['skin_color', 'hair_color', 'eye_color', 'gender', 'climate', 'terrain', 'gravity', 'classification', 'language', 'designation', 'birth_year', 'name', 'title', 'director', 'producer', 'manufacturer', 'model', 'vehicle_class', 'starship_class', 'consumables', 'skin_colors', 'hair_colors', 'eye_colors'];
 
         $allFields = array_merge($numericFields, $textFields);
 
@@ -191,23 +191,48 @@ class LlmSearchService
             $word = strtolower($words[$i]);
 
             // Check for compound fields like "rotation_period" sent as "rotation period"
+            // or "max_atmosphering_speed" sent as "max atmosphering speed"
+            // Also handle partial matches like "max_atmosphering" for "max_atmosphering_speed"
             $fieldWords = 1; // how many words the field name occupies
-            if (isset($words[$i + 1])) {
+            if (isset($words[$i + 2])) {
+                $potentialCompound3 = $word . '_' . strtolower($words[$i + 1]) . '_' . strtolower($words[$i + 2]);
+                if (in_array($potentialCompound3, $allFields, true)) {
+                    $word = $potentialCompound3;
+                    $fieldWords = 3;
+                    $i += 2; // point to the third word of the compound
+                }
+            }
+            if ($fieldWords === 1 && isset($words[$i + 1])) {
                 $potentialCompound = $word . '_' . strtolower($words[$i + 1]);
                 if (in_array($potentialCompound, $allFields, true)) {
                     $word = $potentialCompound;
                     $fieldWords = 2;
                     $i++; // point to the second word of the compound
+                } else {
+                    // Try partial match: "max_atmosphering" might match "max_atmosphering_speed"
+                    $partialMatch = null;
+                    foreach ($allFields as $field) {
+                        if (strpos($field, $potentialCompound) === 0) {
+                            $partialMatch = $field;
+                            break;
+                        }
+                    }
+                    if ($partialMatch) {
+                        $word = $partialMatch;
+                        $fieldWords = 2; // mark as processed 2 words
+                        $i++;
+                    }
                 }
             }
 
-            // Text field with "is" operator: "SKIN COLOR is light"
+            // Text field with "is" operator: "SKIN COLOR is light" or "MODEL is All Terrain Tactical Enforcer"
             if (in_array($word, $textFields, true)) {
                 if (isset($words[$i + 1]) && strtolower($words[$i + 1]) === 'is' && isset($words[$i + 2])) {
-                    $filters[$word] = $words[$i + 2]; // plain string → repository uses LIKE
-                    array_splice($words, $start, $fieldWords + 2);
-                    $i = $start;
-                    continue;
+                    // Consume all remaining words as the value (multi-word product names)
+                    $value = implode(' ', array_slice($words, $i + 2));
+                    $filters[$word] = $value;
+                    array_splice($words, $start);
+                    break; // consumed to end
                 }
                 // Implicit equality: "GENDER female" (no operator)
                 if (isset($words[$i + 1])) {
@@ -270,6 +295,15 @@ class LlmSearchService
                         continue;
                     }
                 }
+
+                // Implicit equality: "CARGO CAPACITY 100000" (field + value, no operator)
+                $excluded = array_merge($allFields, array_keys($entityMap), ['is', 'less', 'greater', 'more', 'smaller', 'equal', 'equals', 'than', 'to']);
+                if (!in_array($operator, $excluded, true) && is_numeric($operator)) {
+                    $filters[$word] = '= ' . $operator;
+                    array_splice($words, $start, $fieldWords + 1);
+                    $i = $start;
+                    continue;
+                }
             }
             $i++;
         }
@@ -311,6 +345,19 @@ class LlmSearchService
                 'designation' => 'species',
                 'average_height' => 'species',
                 'average_lifespan' => 'species',
+                'vehicle_class' => 'vehicles',
+                'starship_class' => 'starships',
+                'MGLT' => 'starships',
+                'hyperdrive_rating' => 'starships',
+                'max_atmosphering_speed' => 'vehicles',
+                'model' => 'vehicles',
+                'manufacturer' => 'vehicles',
+                'cost_in_credits' => 'starships',
+                'cargo_capacity' => 'starships',
+                'consumables' => 'vehicles',
+                'skin_colors' => 'species',
+                'hair_colors' => 'species',
+                'eye_colors' => 'species',
             ];
             if (isset($fieldToEntity[$filterField])) {
                 $entity = $fieldToEntity[$filterField];

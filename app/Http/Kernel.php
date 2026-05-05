@@ -49,7 +49,7 @@ class Kernel extends HttpKernel
     {
         parent::__construct($app, $router);
 
-        if ($app->environment('testing')) {
+        if (getenv('APP_ENV') === 'testing') {
             $this->middlewareGroups['api'] = [
                 \Illuminate\Routing\Middleware\SubstituteBindings::class,
             ];
