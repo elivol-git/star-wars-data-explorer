@@ -18,15 +18,11 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 RUN npm ci && npm run build
 
-RUN mkdir -p storage bootstrap/cache /var/run/php-fpm \
-    && chown -R www-data:www-data storage bootstrap/cache /var/run/php-fpm \
-    && rm -f /usr/local/etc/php-fpm.d/www.conf.default \
-    && rm -f /usr/local/etc/php-fpm.d/docker.conf \
-    && rm -f /usr/local/etc/php-fpm.d/zz-docker.conf
+RUN mkdir -p storage bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache
 
 COPY docker/prod/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/prod/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
-COPY docker/prod/php-fpm-www.conf /usr/local/etc/php-fpm.d/www.conf
 COPY docker/prod/entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh
