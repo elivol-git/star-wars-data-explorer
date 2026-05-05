@@ -18,8 +18,8 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 RUN npm ci && npm run build
 
-RUN mkdir -p storage bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache \
+RUN mkdir -p storage bootstrap/cache /var/run/php-fpm \
+    && chown -R www-data:www-data storage bootstrap/cache /var/run/php-fpm \
     && rm -f /usr/local/etc/php-fpm.d/www.conf.default \
     && rm -f /usr/local/etc/php-fpm.d/docker.conf \
     && rm -f /usr/local/etc/php-fpm.d/zz-docker.conf
