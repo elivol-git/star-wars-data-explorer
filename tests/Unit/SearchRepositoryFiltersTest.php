@@ -29,12 +29,12 @@ class SearchRepositoryFiltersTest extends TestCase
         Person::factory()->create(['name' => 'Yoda', 'height' => 66, 'mass' => 17]);
 
         // Create test starships
-        Starship::factory()->create(['name' => 'Millennium Falcon', 'length' => 34.37, 'crew' => '4 or more', 'starship_class' => 'Light transport']);
-        Starship::factory()->create(['name' => 'Star Destroyer', 'length' => 1600, 'crew' => '9700', 'starship_class' => 'Star Destroyer']);
+        Starship::factory()->create(['name' => 'Millennium Falcon', 'length' => 34.37, 'crew' => '4 or more', 'starship_class' => 'Light transport', 'hyperdrive_rating' => 0.5, 'cargo_capacity' => 100000, 'max_atmosphering_speed' => 1050, 'cost_in_credits' => 1000000, 'model' => 'Modified Corellian freighter', 'manufacturer' => 'Corellian Engineering Corporation']);
+        Starship::factory()->create(['name' => 'Star Destroyer', 'length' => 1600, 'crew' => '9700', 'starship_class' => 'Star Destroyer', 'hyperdrive_rating' => 2.0, 'cargo_capacity' => 36000000, 'max_atmosphering_speed' => 975, 'cost_in_credits' => 150000000, 'model' => 'Imperial Star Destroyer', 'manufacturer' => 'Kuat Drive Yards']);
 
         // Create test vehicles
-        Vehicle::factory()->create(['name' => 'Sand Crawler', 'length' => 36.8, 'crew' => '46', 'vehicle_class' => 'wheeled']);
-        Vehicle::factory()->create(['name' => 'Speeder', 'length' => 5, 'crew' => '1', 'vehicle_class' => 'repulsorcraft']);
+        Vehicle::factory()->create(['name' => 'Sand Crawler', 'length' => 36.8, 'crew' => '46', 'vehicle_class' => 'wheeled', 'cargo_capacity' => 50000, 'max_atmosphering_speed' => 30, 'cost_in_credits' => 150000, 'model' => 'Digger Crawler', 'manufacturer' => 'Corellia Mining Corporation']);
+        Vehicle::factory()->create(['name' => 'TIE Bomber', 'length' => 9.2, 'crew' => '2', 'vehicle_class' => 'starfighter', 'cargo_capacity' => 0, 'max_atmosphering_speed' => 850, 'cost_in_credits' => 65000, 'model' => 'Twin Ion Engine Bomber', 'manufacturer' => 'Sienar Fleet Systems', 'consumables' => '2 days']);
 
         // Create test species
         Species::factory()->create(['name' => 'Human', 'classification' => 'mammal', 'language' => 'Galactic Basic', 'average_lifespan' => 120]);
@@ -295,5 +295,158 @@ class SearchRepositoryFiltersTest extends TestCase
         $result = $this->repository->search('planets', [], []);
 
         $this->assertLessThanOrEqual(20, count($result));
+    }
+
+    // NEW VEHICLE/STARSHIP PROPERTIES
+
+    // Max Atmosphering Speed
+    public function test_filter_starships_by_max_atmosphering_speed_less_than()
+    {
+        $result = $this->repository->search('starships', [], ['max_atmosphering_speed' => '< 900']);
+
+        $this->assertGreaterThan(0, count($result));
+        foreach ($result as $ship) {
+            if ($ship['max_atmosphering_speed'] !== null) {
+                $this->assertLessThan(900, (float)$ship['max_atmosphering_speed']);
+            }
+        }
+    }
+
+    public function test_filter_vehicles_by_max_atmosphering_speed_equals()
+    {
+        $result = $this->repository->search('vehicles', [], ['max_atmosphering_speed' => '= 850']);
+
+        $this->assertGreaterThan(0, count($result));
+        foreach ($result as $vehicle) {
+            $this->assertEquals(850, (int)$vehicle['max_atmosphering_speed']);
+        }
+    }
+
+    // Hyperdrive Rating
+    public function test_filter_starships_by_hyperdrive_rating_less_than()
+    {
+        $result = $this->repository->search('starships', [], ['hyperdrive_rating' => '< 1.0']);
+
+        $this->assertGreaterThan(0, count($result));
+        foreach ($result as $ship) {
+            if ($ship['hyperdrive_rating'] !== null) {
+                $this->assertLessThan(1.0, (float)$ship['hyperdrive_rating']);
+            }
+        }
+    }
+
+    public function test_filter_starships_by_hyperdrive_rating_greater_than()
+    {
+        $result = $this->repository->search('starships', [], ['hyperdrive_rating' => '> 1.5']);
+
+        $this->assertGreaterThan(0, count($result));
+        foreach ($result as $ship) {
+            if ($ship['hyperdrive_rating'] !== null) {
+                $this->assertGreaterThan(1.5, (float)$ship['hyperdrive_rating']);
+            }
+        }
+    }
+
+    // Cargo Capacity
+    public function test_filter_starships_by_cargo_capacity_greater_than()
+    {
+        $result = $this->repository->search('starships', [], ['cargo_capacity' => '> 1000000']);
+
+        $this->assertGreaterThan(0, count($result));
+        foreach ($result as $ship) {
+            if ($ship['cargo_capacity'] !== null) {
+                $this->assertGreaterThan(1000000, (int)$ship['cargo_capacity']);
+            }
+        }
+    }
+
+    public function test_filter_vehicles_by_cargo_capacity_equals()
+    {
+        $result = $this->repository->search('vehicles', [], ['cargo_capacity' => '= 50000']);
+
+        $this->assertGreaterThan(0, count($result));
+        foreach ($result as $vehicle) {
+            $this->assertEquals(50000, (int)$vehicle['cargo_capacity']);
+        }
+    }
+
+    // Cost in Credits
+    public function test_filter_starships_by_cost_in_credits_greater_than()
+    {
+        $result = $this->repository->search('starships', [], ['cost_in_credits' => '> 1000000']);
+
+        $this->assertGreaterThan(0, count($result));
+        foreach ($result as $ship) {
+            if ($ship['cost_in_credits'] !== null) {
+                $this->assertGreaterThan(1000000, (int)$ship['cost_in_credits']);
+            }
+        }
+    }
+
+    public function test_filter_vehicles_by_cost_in_credits_less_than()
+    {
+        $result = $this->repository->search('vehicles', [], ['cost_in_credits' => '< 200000']);
+
+        $this->assertGreaterThan(0, count($result));
+        foreach ($result as $vehicle) {
+            if ($vehicle['cost_in_credits'] !== null) {
+                $this->assertLessThan(200000, (int)$vehicle['cost_in_credits']);
+            }
+        }
+    }
+
+    // Model
+    public function test_filter_starships_by_model_keyword()
+    {
+        $result = $this->repository->search('starships', [], ['model' => 'Corellian']);
+
+        $this->assertGreaterThan(0, count($result));
+        foreach ($result as $ship) {
+            $this->assertStringContainsString('Corellian', $ship['model']);
+        }
+    }
+
+    public function test_filter_vehicles_by_model_keyword()
+    {
+        $result = $this->repository->search('vehicles', [], ['model' => 'Digger']);
+
+        $this->assertGreaterThan(0, count($result));
+        foreach ($result as $vehicle) {
+            $this->assertStringContainsString('Digger', $vehicle['model']);
+        }
+    }
+
+    // Manufacturer
+    public function test_filter_starships_by_manufacturer_keyword()
+    {
+        $result = $this->repository->search('starships', [], ['manufacturer' => 'Kuat']);
+
+        $this->assertGreaterThan(0, count($result));
+        foreach ($result as $ship) {
+            $this->assertStringContainsString('Kuat', $ship['manufacturer']);
+        }
+    }
+
+    public function test_filter_vehicles_by_manufacturer_keyword()
+    {
+        $result = $this->repository->search('vehicles', [], ['manufacturer' => 'Sienar']);
+
+        $this->assertGreaterThan(0, count($result));
+        foreach ($result as $vehicle) {
+            $this->assertStringContainsString('Sienar', $vehicle['manufacturer']);
+        }
+    }
+
+    // Consumables (text field)
+    public function test_filter_vehicles_by_consumables_keyword()
+    {
+        $result = $this->repository->search('vehicles', [], ['consumables' => 'days']);
+
+        $this->assertGreaterThan(0, count($result));
+        foreach ($result as $vehicle) {
+            if (isset($vehicle['consumables'])) {
+                $this->assertStringContainsString('days', strtolower($vehicle['consumables']));
+            }
+        }
     }
 }
