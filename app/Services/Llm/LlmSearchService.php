@@ -322,6 +322,33 @@ class LlmSearchService
             }
         }
 
+        // If still mixed with short query (1-3 words) and no filters, guess entity from keyword pattern
+        if ($entity === 'mixed' && empty($filters) && count($keywords) <= 3 && count($keywords) > 0) {
+            // Common starship/vehicle/species/people name patterns
+            $keywordStr = implode(' ', $keywords);
+
+            // People hints (check first - most specific)
+            if (preg_match('/(skywalker|solo|leia|vader|luke|han|lando|chewie|palpatine|maul|binks)/i', $keywordStr)) {
+                $entity = 'people';
+            }
+            // Planet hints
+            elseif (preg_match('/(tatooine|alderaan|yavin|hoth|dagobah|bespin|endor|naboo|coruscant|kamino|geonosis|mustafar|kashyyyk)/i', $keywordStr)) {
+                $entity = 'planets';
+            }
+            // Starship hints
+            elseif (preg_match('/(falcon|star|wing|fighter|interceptor|cruiser|shuttle|destroyer|executor|slave|barge|republic|xwing|awing|ywing|cls|tie)/i', $keywordStr)) {
+                $entity = 'starships';
+            }
+            // Vehicle hints
+            elseif (preg_match('/(crawler|speeder|walker|tank|transport|skiff|sail|cycle|bike|landspeeder)/i', $keywordStr)) {
+                $entity = 'vehicles';
+            }
+            // Species hints (least specific - many overlap with people)
+            elseif (preg_match('/(wookiee|ewok|droid|dug|sullustan|weequay|tusken|jawas|gungan|trandoshan|rodian|zabrak|yoda|jedi|sith)/i', $keywordStr)) {
+                $entity = 'species';
+            }
+        }
+
         // Infer entity from filter field if entity is still mixed
         if ($entity === 'mixed' && !empty($filters)) {
             $filterField = array_key_first($filters);

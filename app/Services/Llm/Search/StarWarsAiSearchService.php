@@ -79,14 +79,14 @@ class StarWarsAiSearchService
                         $data->loadMissing(['films.planets', 'pilots.homeworld']);
 
                         $planets = $this->{$secondaryEntities[$entity]}($data);
-//                        Log::info("planet:". print_r($planets, true));
 
                         $this->repo->loadPopupRelations('planets', $planets);
 
                         return [
-                            "entity" => "planets",
+                            "entity" => $entity,
                             "parsed" => $parsed,
-                            "data"   => $this->attachMatch($planets, $match)
+                            "data"   => $this->attachMatch($data, $match),
+                            "relatedPlanets" => $planets
                         ];
                     }
 
@@ -136,10 +136,32 @@ class StarWarsAiSearchService
                         : !empty($items);
                 });
 
+                // Extract related planets for secondary entities in mixed results
+                $relatedPlanets = collect();
+
+                if (!empty($mixedData['vehicles'])) {
+                    $relatedPlanets = $relatedPlanets->merge(
+                        $this->extractPlanetsFromVehicles($mixedData['vehicles'])
+                    );
+                }
+
+                if (!empty($mixedData['starships'])) {
+                    $relatedPlanets = $relatedPlanets->merge(
+                        $this->extractPlanetsFromStarships($mixedData['starships'])
+                    );
+                }
+
+                if (!empty($mixedData['species'])) {
+                    $relatedPlanets = $relatedPlanets->merge(
+                        $this->extractPlanetsFromSpecies($mixedData['species'])
+                    );
+                }
+
                 return [
                     "entity" => "mixed",
                     "parsed" => $parsed,
-                    "data"   => $mixedData
+                    "data"   => $mixedData,
+                    "relatedPlanets" => $relatedPlanets->unique('id')->values()
                 ];
             }
         );

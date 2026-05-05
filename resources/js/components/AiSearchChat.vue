@@ -57,6 +57,20 @@
 
                 </div>
 
+                <!-- RELATED PLANETS (for mixed with secondary entities) -->
+                <div v-if="relatedPlanets?.length" class="planets-section">
+                    <h2 class="group-title">Related Planets</h2>
+                    <div class="grid">
+                        <PlanetCard
+                            v-for="p in relatedPlanets"
+                            :key="p.id"
+                            :planet="p"
+                            :match="p.match"
+                            :keywords="p.keywords"
+                        />
+                    </div>
+                </div>
+
             </div>
 
 
@@ -70,30 +84,62 @@
                     No results found
                 </div>
 
-                <div v-else class="grid">
+                <div v-else>
 
-                    <template v-if="entity === 'planets' || entity === 'films'">
-
-                        <PlanetCard
-                            v-for="p in entity === 'films' ? filmPlanets : data"
-                            :key="p.id"
-                            :planet="p"
-                            :match="p.match"
-                            :keywords="p.keywords"
-                        />
-
-                    </template>
-
-                    <template v-else>
+                    <!-- PRIMARY ENTITY (vehicle/starship/species) -->
+                    <div v-if="['vehicles', 'starships', 'species'].includes(entity)" class="grid">
 
                         <EntityCard
                             v-for="x in data"
                             :key="x.id"
                             :type="entity"
                             :item="x"
+                            :highlight="true"
                         />
 
-                    </template>
+                    </div>
+
+                    <!-- RELATED PLANETS -->
+                    <div v-if="relatedPlanets?.length" class="planets-section">
+                        <h2 class="group-title">Related Planets</h2>
+                        <div class="grid">
+                            <PlanetCard
+                                v-for="p in relatedPlanets"
+                                :key="p.id"
+                                :planet="p"
+                                :match="p.match"
+                                :keywords="p.keywords"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- DEFAULT GRID (planets/films) -->
+                    <div v-else class="grid">
+
+                        <template v-if="entity === 'planets' || entity === 'films'">
+
+                            <PlanetCard
+                                v-for="p in entity === 'films' ? filmPlanets : data"
+                                :key="p.id"
+                                :planet="p"
+                                :match="p.match"
+                                :keywords="p.keywords"
+                            />
+
+                        </template>
+
+                        <template v-else>
+
+                            <EntityCard
+                                v-for="x in data"
+                                :key="x.id"
+                                :type="entity"
+                                :item="x"
+                            />
+
+                        </template>
+
+                    </div>
 
                 </div>
 
@@ -112,6 +158,7 @@ import EntityCard from "./entities/EntityCard.vue"
 
 const entity = ref(null)
 const data = ref(null)
+const relatedPlanets = ref(null)
 const loading = ref(true)
 const error = ref(null)
 
@@ -192,6 +239,7 @@ async function loadResults(q){
 
         entity.value = json.entity
         data.value = json.data
+        relatedPlanets.value = json.relatedPlanets ?? null
 
     }catch(e){
 
@@ -219,3 +267,18 @@ onMounted(()=>{
 })
 
 </script>
+
+<style scoped>
+.planets-section {
+    margin-top: 40px;
+}
+
+.planets-section .group-title {
+    display: block !important;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    color: #ffd700;
+    border-bottom: 2px solid #ffd700;
+    padding-bottom: 10px;
+}
+</style>
