@@ -23,6 +23,7 @@ RUN mkdir -p storage bootstrap/cache \
 
 COPY docker/prod/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/prod/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY docker/prod/php-fpm-www.conf /usr/local/etc/php-fpm.d/zzz-www.conf
 COPY docker/prod/entrypoint.sh /entrypoint.sh
 
 RUN chmod +x /entrypoint.sh
