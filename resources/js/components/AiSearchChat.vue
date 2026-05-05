@@ -26,7 +26,19 @@
 
                     <div class="planet-grid">
 
-                        <!-- PLANETS -->
+                        <!-- FILMS -->
+                        <template v-if="group.type === 'films'">
+
+                            <EntityCard
+                                v-for="x in group.items"
+                                :key="x.id"
+                                :type="group.type"
+                                :item="x"
+                            />
+
+                        </template>
+
+                        <!-- PLANETS (standalone or from films) -->
                         <template
                             v-if="group.type === 'planets' || (group.type === 'films' && planetsFromFilms(group.items).length)"
                         >
@@ -41,7 +53,7 @@
 
                         </template>
 
-                        <!-- OTHER ENTITIES -->
+                        <!-- OTHER ENTITIES (starships/vehicles/species/people) -->
                         <template v-else>
 
                             <EntityCard
