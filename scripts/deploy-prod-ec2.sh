@@ -24,6 +24,7 @@ rsync -avz \
   --exclude=docker/dev \
   --exclude=docker/ssl \
   --exclude=docker/mysql \
+  --exclude=public/build \
   -e "ssh -i $SSH_KEY" ./ "$EC2_USER_HOST:$REMOTE_PATH"
 
 if [ -z "${DB_PASSWORD:-}" ]; then
