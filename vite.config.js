@@ -15,15 +15,17 @@ export default defineConfig({
         vue(),
     ],
 
-    server: {
-        host: true,
-        port: 5173,
+    ...(process.env.NODE_ENV === 'production' ? {} : {
+        server: {
+            host: true,
+            port: 5173,
 
-        // IMPORTANT: browser connects via host machine
-        hmr: {
-            host: 'localhost',
-            protocol: 'ws',
-            clientPort: 5173,
+            // IMPORTANT: browser connects via host machine
+            hmr: {
+                host: 'localhost',
+                protocol: 'ws',
+                clientPort: 5173,
+            },
         },
-    },
+    }),
 });
