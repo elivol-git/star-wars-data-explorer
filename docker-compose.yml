@@ -8,11 +8,11 @@ services:
         networks:
             - app
         healthcheck:
-            test: ["CMD", "php-fpm-healthcheck"]
+            test: ["CMD", "curl", "-f", "http://localhost/"]
             interval: 10s
             timeout: 3s
             retries: 3
-            start_period: 15s
+            start_period: 30s
 
     nginx:
         image: nginx:latest
