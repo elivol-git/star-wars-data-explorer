@@ -166,19 +166,17 @@ const fetchFullEntity = async (ent, type) => {
         if (res.ok) {
             const json = await res.json();
 
-            if (json.entity === fetchType && Array.isArray(json.data)) {
-                let found;
-                if (entityId) {
-                    found = json.data.find(item => item.id === entityId);
-                } else {
-                    found = json.data[0];
-                }
+            let found;
+            if (entityId && json.data && Array.isArray(json.data)) {
+                found = json.data.find(item => item.id === entityId);
+            } else if (json.data && Array.isArray(json.data) && json.data.length > 0) {
+                found = json.data[0];
+            }
 
-                if (found) {
-                    const idx = stack.value.indexOf(ent);
-                    if (idx >= 0) {
-                        stack.value[idx] = found;
-                    }
+            if (found) {
+                const idx = stack.value.indexOf(ent);
+                if (idx >= 0) {
+                    stack.value[idx] = found;
                 }
             }
         }
@@ -192,7 +190,7 @@ const fetchFullEntity = async (ent, type) => {
 watch(entity, (newEntity) => {
     if (newEntity) {
         const typeToFetch = props.entityType || detectEntityType(newEntity);
-        if (typeToFetch) {
+        if (typeToFetch && needsFullData(newEntity, typeToFetch)) {
             fetchFullEntity(newEntity, typeToFetch);
         }
     }
@@ -205,9 +203,24 @@ const onKey = (e) => {
     }
 };
 
+const needsFullData = (ent, type) => {
+    if (!ent) return false;
+
+    const requiredFields = {
+        vehicles: ['vehicle_class', 'model'],
+        starships: ['starship_class', 'model'],
+        species: ['classification'],
+        people: ['birth_year', 'gender'],
+        films: ['episode_id'],
+    };
+
+    const fields = requiredFields[type] || [];
+    return fields.some(field => ent[field] === undefined);
+};
+
 onMounted(() => {
     window.addEventListener('keydown', onKey);
-    if (props.entity && props.entityType) {
+    if (props.entity && props.entityType && needsFullData(props.entity, props.entityType)) {
         fetchFullEntity(props.entity, props.entityType);
     }
 });
