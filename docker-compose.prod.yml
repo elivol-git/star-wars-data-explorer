@@ -13,6 +13,7 @@ services:
       - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
     volumes:
       - .:/var/www
+      - /var/www/public/build
       - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
       - app
