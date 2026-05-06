@@ -123,7 +123,7 @@ import SpeciesCard from './SpeciesCard.vue';
 import PersonCard from './PersonCard.vue';
 import FilmCard from './FilmCard.vue';
 
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue';
 
 const LIMIT = 5;
 
@@ -137,8 +137,44 @@ const emit = defineEmits(['close']);
 const stack = ref([props.entity]);
 const expanded = ref({});
 const modalRef = ref(null);
+const loading = ref(false);
 
 const entity = computed(() => stack.value.at(-1));
+
+const fetchFullEntity = async (ent, type) => {
+    if (!ent?.id || !ent.name) return;
+
+    try {
+        loading.value = true;
+        const res = await fetch(`/api/ai-search?q=${encodeURIComponent(ent.name)}`);
+        if (res.ok) {
+            const json = await res.json();
+
+            if (json.entity === type && Array.isArray(json.data)) {
+                const found = json.data.find(item => item.id === ent.id);
+                if (found) {
+                    const idx = stack.value.indexOf(ent);
+                    if (idx >= 0) {
+                        stack.value[idx] = found;
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        console.error(`Failed to fetch ${type}:`, e);
+    } finally {
+        loading.value = false;
+    }
+};
+
+watch(entity, (newEntity) => {
+    if (newEntity && props.entityType) {
+        const propCount = Object.keys(newEntity).length;
+        if (propCount <= 5) {
+            fetchFullEntity(newEntity, props.entityType);
+        }
+    }
+}, { immediate: false });
 
 const onKey = (e) => {
     if (e.key === 'Escape') {
@@ -147,7 +183,15 @@ const onKey = (e) => {
     }
 };
 
-onMounted(() => window.addEventListener('keydown', onKey));
+onMounted(() => {
+    window.addEventListener('keydown', onKey);
+    if (props.entity && props.entityType) {
+        const propCount = Object.keys(props.entity).length;
+        if (propCount <= 5) {
+            fetchFullEntity(props.entity, props.entityType);
+        }
+    }
+});
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
 
 const closeAll = () => {
