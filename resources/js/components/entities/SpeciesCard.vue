@@ -28,17 +28,17 @@
     </div>
 
     <div class="colors-section">
-      <div v-if="item.skin_colors" class="color-group">
-        <span class="color-label">SKIN</span>
-        <div class="color-values">{{ item.skin_colors }}</div>
+      <div v-if="item.skin_colors" class="color-row">
+        <span class="emoji">🎨</span>
+        <span class="color-value">{{ item.skin_colors }}</span>
       </div>
-      <div v-if="item.hair_colors" class="color-group">
-        <span class="color-label">HAIR</span>
-        <div class="color-values">{{ item.hair_colors }}</div>
+      <div v-if="item.hair_colors" class="color-row">
+        <span class="emoji">💇</span>
+        <span class="color-value">{{ item.hair_colors }}</span>
       </div>
-      <div v-if="item.eye_colors" class="color-group">
-        <span class="color-label">EYES</span>
-        <div class="color-values">{{ item.eye_colors }}</div>
+      <div v-if="item.eye_colors" class="color-row">
+        <span class="emoji">👁️</span>
+        <span class="color-value">{{ item.eye_colors }}</span>
       </div>
     </div>
   </div>
@@ -141,21 +141,20 @@ defineProps({
   margin-top: 12px;
 }
 
-.color-group {
-  margin-bottom: 10px;
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
 }
 
-.color-label {
-  display: block;
-  color: #aaa;
-  font-size: 12px;
-  letter-spacing: 1px;
-  margin-bottom: 4px;
+.emoji {
+  font-size: 16px;
+  flex-shrink: 0;
 }
 
-.color-values {
+.color-value {
   color: #ddd;
-  padding-left: 8px;
-  border-left: 2px solid rgba(255, 215, 0, 0.3);
+  font-size: 13px;
 }
 </style>
