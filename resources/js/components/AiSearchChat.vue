@@ -29,10 +29,9 @@
                         <!-- FILMS -->
                         <template v-if="group.type === 'films'">
 
-                            <EntityCard
+                            <FilmCard
                                 v-for="x in group.items"
                                 :key="x.id"
-                                :type="group.type"
                                 :item="x"
                             />
 
@@ -53,7 +52,51 @@
 
                         </template>
 
-                        <!-- OTHER ENTITIES (starships/vehicles/species/people) -->
+                        <!-- VEHICLES -->
+                        <template v-else-if="group.type === 'vehicles'">
+
+                            <VehicleCard
+                                v-for="x in group.items"
+                                :key="x.id"
+                                :item="x"
+                            />
+
+                        </template>
+
+                        <!-- STARSHIPS -->
+                        <template v-else-if="group.type === 'starships'">
+
+                            <StarshipCard
+                                v-for="x in group.items"
+                                :key="x.id"
+                                :item="x"
+                            />
+
+                        </template>
+
+                        <!-- SPECIES -->
+                        <template v-else-if="group.type === 'species'">
+
+                            <SpeciesCard
+                                v-for="x in group.items"
+                                :key="x.id"
+                                :item="x"
+                            />
+
+                        </template>
+
+                        <!-- PEOPLE -->
+                        <template v-else-if="group.type === 'people'">
+
+                            <PersonCard
+                                v-for="x in group.items"
+                                :key="x.id"
+                                :item="x"
+                            />
+
+                        </template>
+
+                        <!-- FALLBACK -->
                         <template v-else>
 
                             <EntityCard
@@ -98,13 +141,60 @@
 
                 <div v-else>
 
-                    <!-- PRIMARY ENTITY (vehicle/starship/species) -->
-                    <div v-if="['vehicles', 'starships', 'species'].includes(entity)" class="grid">
+                    <!-- VEHICLES -->
+                    <div v-if="entity === 'vehicles'" class="grid">
 
-                        <EntityCard
+                        <VehicleCard
                             v-for="x in data"
                             :key="x.id"
-                            :type="entity"
+                            :item="x"
+                            :highlight="true"
+                        />
+
+                    </div>
+
+                    <!-- STARSHIPS -->
+                    <div v-else-if="entity === 'starships'" class="grid">
+
+                        <StarshipCard
+                            v-for="x in data"
+                            :key="x.id"
+                            :item="x"
+                            :highlight="true"
+                        />
+
+                    </div>
+
+                    <!-- SPECIES -->
+                    <div v-else-if="entity === 'species'" class="grid">
+
+                        <SpeciesCard
+                            v-for="x in data"
+                            :key="x.id"
+                            :item="x"
+                            :highlight="true"
+                        />
+
+                    </div>
+
+                    <!-- PEOPLE -->
+                    <div v-else-if="entity === 'people'" class="grid">
+
+                        <PersonCard
+                            v-for="x in data"
+                            :key="x.id"
+                            :item="x"
+                            :highlight="true"
+                        />
+
+                    </div>
+
+                    <!-- FILMS -->
+                    <div v-else-if="entity === 'films'" class="grid">
+
+                        <FilmCard
+                            v-for="x in data"
+                            :key="x.id"
                             :item="x"
                             :highlight="true"
                         />
@@ -125,31 +215,16 @@
                         </div>
                     </div>
 
-                    <!-- DEFAULT GRID (planets/films) -->
+                    <!-- DEFAULT GRID (planets) -->
                     <div v-else class="grid">
 
-                        <template v-if="entity === 'planets' || entity === 'films'">
-
-                            <PlanetCard
-                                v-for="p in entity === 'films' ? filmPlanets : data"
-                                :key="p.id"
-                                :planet="p"
-                                :match="p.match"
-                                :keywords="p.keywords"
-                            />
-
-                        </template>
-
-                        <template v-else>
-
-                            <EntityCard
-                                v-for="x in data"
-                                :key="x.id"
-                                :type="entity"
-                                :item="x"
-                            />
-
-                        </template>
+                        <PlanetCard
+                            v-for="p in data"
+                            :key="p.id"
+                            :planet="p"
+                            :match="p.match"
+                            :keywords="p.keywords"
+                        />
 
                     </div>
 
@@ -167,6 +242,11 @@
 import { ref, computed, onMounted } from "vue"
 import PlanetCard from "./PlanetCard.vue"
 import EntityCard from "./entities/EntityCard.vue"
+import VehicleCard from "./entities/VehicleCard.vue"
+import StarshipCard from "./entities/StarshipCard.vue"
+import SpeciesCard from "./entities/SpeciesCard.vue"
+import PersonCard from "./entities/PersonCard.vue"
+import FilmCard from "./entities/FilmCard.vue"
 
 const entity = ref(null)
 const data = ref(null)
