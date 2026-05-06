@@ -11,35 +11,35 @@
 
             <div v-if="match.vehicle" class="match-item">
                 🚀
-                <span class="match-entity" @click="openEntity(match.vehicle)">
+                <span class="match-entity" @click="openEntity(match.vehicle, 'vehicles')">
           {{ match.vehicle.name }}
         </span>
             </div>
 
             <div v-if="match.starship" class="match-item">
                 🛰
-                <span class="match-entity" @click="openEntity(match.starship)">
+                <span class="match-entity" @click="openEntity(match.starship, 'starships')">
           {{ match.starship.name }}
         </span>
             </div>
 
             <div v-if="match.species" class="match-item">
                 🧬
-                <span class="match-entity" @click="openEntity(match.species)">
+                <span class="match-entity" @click="openEntity(match.species, 'species')">
           {{ match.species.name }}
         </span>
             </div>
 
             <div v-if="match.film" class="match-item">
                 🎬
-                <span class="match-entity" @click="openEntity(match.film)">
+                <span class="match-entity" @click="openEntity(match.film, 'films')">
           {{ match.film.title }}
         </span>
             </div>
 
             <div v-if="match.person" class="match-item">
                 👤
-                <span class="match-entity" @click="openEntity(match.person)">
+                <span class="match-entity" @click="openEntity(match.person, 'people')">
           {{ match.person.name }}
         </span>
             </div>
@@ -78,7 +78,8 @@
         <EntityModal
             v-if="activeEntity"
             :entity="activeEntity"
-            @close="activeEntity = null"
+            :entity-type="activeEntityType"
+            @close="activeEntity = null; activeEntityType = null"
         />
 
     </div>
@@ -94,13 +95,30 @@ const props = defineProps({
 })
 
 const activeEntity = ref(null)
+const activeEntityType = ref(null)
 
-const openEntity = (entity) => {
+const openEntity = (entity, type) => {
     activeEntity.value = entity
+    if (type) {
+        activeEntityType.value = type
+    } else {
+        activeEntityType.value = detectEntityType(entity)
+    }
 }
 
 const openList = (list) => {
     activeEntity.value = list[0]
+    activeEntityType.value = detectEntityType(list[0])
+}
+
+const detectEntityType = (entity) => {
+    if (!entity) return null
+    if (entity.episode_id !== undefined || entity.opening_crawl !== undefined) return 'films'
+    if (entity.vehicle_class !== undefined) return 'vehicles'
+    if (entity.starship_class !== undefined) return 'starships'
+    if (entity.classification !== undefined || entity.designation !== undefined) return 'species'
+    if (entity.birth_year !== undefined || entity.gender !== undefined) return 'people'
+    return null
 }
 
 /*

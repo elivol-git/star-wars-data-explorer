@@ -25,13 +25,39 @@
                         </span>
                     </div>
 
-                    <h3 class="planet-title">
-                        {{ entity.title || entity.name }}
-                    </h3>
+                    <!-- TYPE-SPECIFIC CARDS -->
+                    <VehicleCard v-if="entityType === 'vehicles'" :item="entity" />
+                    <StarshipCard v-else-if="entityType === 'starships'" :item="entity" />
+                    <SpeciesCard v-else-if="entityType === 'species'" :item="entity" />
+                    <PersonCard v-else-if="entityType === 'people'" :item="entity" />
+                    <FilmCard v-else-if="entityType === 'films'" :item="entity" />
 
-                    <!-- FILM -->
-                    <div v-if="isFilm" class="film-info">
-                        <div class="planet-info">
+                    <!-- FALLBACK FOR PLANETS AND UNTYPED ENTITIES -->
+                    <div v-else>
+                        <h3 class="planet-title">
+                            {{ entity.title || entity.name }}
+                        </h3>
+
+                        <!-- FILM -->
+                        <div v-if="isFilm" class="film-info">
+                            <div class="planet-info">
+                                <div
+                                    v-for="(value, key) in info"
+                                    :key="key"
+                                    class="planet-info-row"
+                                >
+                                    <span class="label">{{ format(key) }}</span>
+                                    <span class="value">{{ value }}</span>
+                                </div>
+                            </div>
+
+                            <div class="crawl">
+                                {{ entity.opening_crawl }}
+                            </div>
+                        </div>
+
+                        <!-- NON-FILM -->
+                        <div v-else class="planet-info">
                             <div
                                 v-for="(value, key) in info"
                                 :key="key"
@@ -40,22 +66,6 @@
                                 <span class="label">{{ format(key) }}</span>
                                 <span class="value">{{ value }}</span>
                             </div>
-                        </div>
-
-                        <div class="crawl">
-                            {{ entity.opening_crawl }}
-                        </div>
-                    </div>
-
-                    <!-- NON-FILM -->
-                    <div v-else class="planet-info">
-                        <div
-                            v-for="(value, key) in info"
-                            :key="key"
-                            class="planet-info-row"
-                        >
-                            <span class="label">{{ format(key) }}</span>
-                            <span class="value">{{ value }}</span>
                         </div>
                     </div>
 
@@ -107,13 +117,19 @@
 
 <script setup>
 import EntityTooltip from './EntityTooltip.vue';
+import VehicleCard from './VehicleCard.vue';
+import StarshipCard from './StarshipCard.vue';
+import SpeciesCard from './SpeciesCard.vue';
+import PersonCard from './PersonCard.vue';
+import FilmCard from './FilmCard.vue';
 
 import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 
 const LIMIT = 5;
 
 const props = defineProps({
-    entity: Object
+    entity: Object,
+    entityType: String
 });
 
 const emit = defineEmits(['close']);
