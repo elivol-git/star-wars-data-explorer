@@ -1,5 +1,7 @@
 FROM php:8.3-fpm
 
+ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
+
 RUN apt-get update && apt-get install -y \
     git unzip curl libzip-dev zip nginx supervisor awscli mariadb-client nodejs npm procps \
     && docker-php-ext-install pdo_mysql zip pcntl \
