@@ -160,24 +160,45 @@ const fetchFullEntity = async (ent, type) => {
     const fetchType = type || detectEntityType(ent);
     if (!fetchType) return;
 
+    const searchVariations = [
+        searchName,
+        searchName.split(' ').pop(),
+        searchName.split(' ').shift(),
+    ].filter((s, i, arr) => s && arr.indexOf(s) === i);
+
     try {
         loading.value = true;
-        const res = await fetch(`/api/ai-search?q=${encodeURIComponent(searchName)}`);
-        if (res.ok) {
-            const json = await res.json();
 
+        for (const query of searchVariations) {
+            const res = await fetch(`/api/ai-search?q=${encodeURIComponent(query)}`);
+            if (!res.ok) continue;
+
+            const json = await res.json();
             let found;
-            if (entityId && json.data && Array.isArray(json.data)) {
-                found = json.data.find(item => item.id === entityId);
-            } else if (json.data && Array.isArray(json.data) && json.data.length > 0) {
-                found = json.data[0];
+
+            if (json.data) {
+                if (Array.isArray(json.data)) {
+                    if (entityId) {
+                        found = json.data.find(item => item.id === entityId);
+                    } else if (json.data.length > 0) {
+                        found = json.data[0];
+                    }
+                } else if (typeof json.data === 'object' && json.data[fetchType]) {
+                    const items = Array.isArray(json.data[fetchType]) ? json.data[fetchType] : [];
+                    if (entityId) {
+                        found = items.find(item => item.id === entityId);
+                    } else if (items.length > 0) {
+                        found = items[0];
+                    }
+                }
             }
 
             if (found) {
                 const idx = stack.value.indexOf(ent);
                 if (idx >= 0) {
-                    stack.value[idx] = found;
+                    stack.value[idx] = { ...found };
                 }
+                break;
             }
         }
     } catch (e) {
