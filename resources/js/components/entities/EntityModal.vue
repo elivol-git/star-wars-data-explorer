@@ -141,17 +141,39 @@ const loading = ref(false);
 
 const entity = computed(() => stack.value.at(-1));
 
+const detectEntityType = (ent) => {
+    if (!ent) return null;
+    if (ent.episode_id !== undefined || ent.opening_crawl !== undefined) return 'films';
+    if (ent.vehicle_class !== undefined) return 'vehicles';
+    if (ent.starship_class !== undefined) return 'starships';
+    if (ent.classification !== undefined || ent.designation !== undefined) return 'species';
+    if (ent.birth_year !== undefined || ent.gender !== undefined) return 'people';
+    return null;
+};
+
 const fetchFullEntity = async (ent, type) => {
-    if (!ent?.id || !ent.name) return;
+    const searchName = ent?.name || ent?.title;
+    const entityId = ent?.id;
+
+    if (!searchName) return;
+
+    const fetchType = type || detectEntityType(ent);
+    if (!fetchType) return;
 
     try {
         loading.value = true;
-        const res = await fetch(`/api/ai-search?q=${encodeURIComponent(ent.name)}`);
+        const res = await fetch(`/api/ai-search?q=${encodeURIComponent(searchName)}`);
         if (res.ok) {
             const json = await res.json();
 
-            if (json.entity === type && Array.isArray(json.data)) {
-                const found = json.data.find(item => item.id === ent.id);
+            if (json.entity === fetchType && Array.isArray(json.data)) {
+                let found;
+                if (entityId) {
+                    found = json.data.find(item => item.id === entityId);
+                } else {
+                    found = json.data[0];
+                }
+
                 if (found) {
                     const idx = stack.value.indexOf(ent);
                     if (idx >= 0) {
@@ -161,17 +183,17 @@ const fetchFullEntity = async (ent, type) => {
             }
         }
     } catch (e) {
-        console.error(`Failed to fetch ${type}:`, e);
+        console.error(`Failed to fetch ${fetchType}:`, e);
     } finally {
         loading.value = false;
     }
 };
 
 watch(entity, (newEntity) => {
-    if (newEntity && props.entityType) {
-        const propCount = Object.keys(newEntity).length;
-        if (propCount <= 5) {
-            fetchFullEntity(newEntity, props.entityType);
+    if (newEntity) {
+        const typeToFetch = props.entityType || detectEntityType(newEntity);
+        if (typeToFetch) {
+            fetchFullEntity(newEntity, typeToFetch);
         }
     }
 }, { immediate: false });
@@ -186,10 +208,7 @@ const onKey = (e) => {
 onMounted(() => {
     window.addEventListener('keydown', onKey);
     if (props.entity && props.entityType) {
-        const propCount = Object.keys(props.entity).length;
-        if (propCount <= 5) {
-            fetchFullEntity(props.entity, props.entityType);
-        }
+        fetchFullEntity(props.entity, props.entityType);
     }
 });
 onBeforeUnmount(() => window.removeEventListener('keydown', onKey));
