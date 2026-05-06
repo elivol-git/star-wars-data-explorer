@@ -7,6 +7,12 @@ services:
             - .:/var/www
         networks:
             - app
+        healthcheck:
+            test: ["CMD", "php-fpm-healthcheck"]
+            interval: 10s
+            timeout: 3s
+            retries: 3
+            start_period: 15s
 
     nginx:
         image: nginx:latest
@@ -21,7 +27,8 @@ services:
         networks:
             - app
         depends_on:
-            - app
+            app:
+                condition: service_healthy
 
     db:
         image: mysql:8.0

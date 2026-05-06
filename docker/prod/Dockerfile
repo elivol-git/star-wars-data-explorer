@@ -5,6 +5,8 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-install pdo_mysql zip pcntl \
     && pecl install redis \
     && docker-php-ext-enable redis \
+    && curl -fsSL -o /usr/local/bin/php-fpm-healthcheck https://raw.githubusercontent.com/renatomefi/php-fpm-healthcheck/master/php-fpm-healthcheck \
+    && chmod +x /usr/local/bin/php-fpm-healthcheck \
     && apt-get clean && rm -rf /var/lib/apt/lists/* \
     && mkdir -p /root/.aws
 

@@ -9,6 +9,24 @@ SECRET_ARN="${SECRET_ARN:-arn:aws:secretsmanager:eu-north-1:078238935621:secret:
 
 cd "$LOCAL_PATH"
 
+rsync -avz --progress \
+  --exclude=node_modules \
+  --exclude=vendor \
+  --exclude=.git \
+  --exclude=.phpunit.result.cache \
+  --exclude=global-bundle.pem \
+  --exclude=.idea \
+  --exclude=.claude \
+  --exclude=storage/framework/views \
+  --exclude=storage/framework/cache \
+  --exclude=storage/framework/sessions \
+  --exclude=storage/logs \
+  --exclude=bootstrap/cache \
+  --exclude=docker/dev \
+  --exclude=docker/ssl \
+  --exclude=docker/mysql \
+  -e "ssh -i $SSH_KEY" ./ "$EC2_USER_HOST:$REMOTE_PATH"
+
 if [ -z "${DB_PASSWORD:-}" ]; then
   if command -v aws >/dev/null 2>&1; then
     AWS_RESPONSE="$(aws secretsmanager get-secret-value \
@@ -46,14 +64,6 @@ except Exception as e:
   fi
 fi
 
-rsync -avz \
-  --exclude=node_modules \
-  --exclude=.git \
-  --exclude=.idea \
-  --exclude=storage/framework/views \
-  --exclude=storage/logs \
-  --exclude=bootstrap/cache \
-  -e "ssh -i $SSH_KEY" ./ "$EC2_USER_HOST:$REMOTE_PATH"
 
 ssh -i "$SSH_KEY" "$EC2_USER_HOST" DB_PASSWORD="$DB_PASSWORD" bash -s <<EOF
 set -euo pipefail

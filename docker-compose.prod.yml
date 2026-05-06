@@ -12,11 +12,17 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN}
     volumes:
-      - appdata:/var/www
+      - .:/var/www
     networks:
       - app
     depends_on:
       - redis
+    healthcheck:
+      test: ["CMD", "php-fpm-healthcheck"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
 
   nginx:
     image: nginx:latest
@@ -25,13 +31,14 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - appdata:/var/www
+      - .:/var/www
       - ./docker/prod/nginx.conf:/etc/nginx/conf.d/default.conf
       - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
       - app
     depends_on:
-      - app
+      app:
+        condition: service_healthy
 
   redis:
     restart: unless-stopped
@@ -40,6 +47,3 @@ services:
 
 networks:
   app:
-
-volumes:
-  appdata:

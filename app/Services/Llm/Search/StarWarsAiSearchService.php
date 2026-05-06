@@ -18,7 +18,7 @@ class StarWarsAiSearchService
     {
         return Cache::remember(
             "ai_search_v2_" . md5($query),
-            60,
+            6000,
             function () use ($query) {
 
                 $parsed = $this->llm->parseQuery($query);
