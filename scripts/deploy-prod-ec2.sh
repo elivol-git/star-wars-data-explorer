@@ -9,12 +9,11 @@ SECRET_ARN="${SECRET_ARN:-arn:aws:secretsmanager:eu-north-1:078238935621:secret:
 
 cd "$LOCAL_PATH"
 
-rsync -avz --progress \
+rsync -avz \
   --exclude=node_modules \
   --exclude=vendor \
   --exclude=.git \
   --exclude=.phpunit.result.cache \
-  --exclude=global-bundle.pem \
   --exclude=.idea \
   --exclude=.claude \
   --exclude=storage/framework/views \

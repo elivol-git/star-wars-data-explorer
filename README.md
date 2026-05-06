@@ -311,7 +311,7 @@ docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
 ### Production Docker run:
 ```bash
 cd /mnt/c/projects/star-wars-data-explorer
-rsync -avz --exclude=node_modules --exclude=.git --exclude=.claude --exclude=.idea --exclude=storage/ --exclude=docker/dev --exclude=docker/ssl --exclude=docker/mysql --exclude=bootstrap/cache --exclude=vendor --exclude=.phpunit.result.cache --exclude=global-bundle.pem --exclude=.npm -e "ssh -i ~/.ssh/aws-starwars.pem" ./ ubuntu@16.171.145.213:/home/ubuntu/starwars  
+rsync -avz --exclude=node_modules --exclude=.git --exclude=.claude --exclude=.idea --exclude=storage/ --exclude=docker/dev --exclude=docker/ssl --exclude=docker/mysql --exclude=bootstrap/cache --exclude=vendor --exclude=.phpunit.result.cache --exclude=.npm -e "ssh -i ~/.ssh/aws-starwars.pem" ./ ubuntu@16.171.145.213:/home/ubuntu/starwars  
 ssh -t -i ~/.ssh/aws-starwars.pem ubuntu@16.171.145.213 'cd ~/starwars && exec bash'
 docker compose -f docker-compose.yml -f docker-compose.prod.yml down                                                                                                                                                              
 DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id 'arn:aws:secretsmanager:eu-north-1:078238935621:secret:rds!db-7e5ad50b-88ae-4554-ad3e-f6dbe758b9d0-QGTzsj' --region eu-north-1 --query SecretString --output text |
