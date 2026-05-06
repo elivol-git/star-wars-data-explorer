@@ -1,8 +1,8 @@
 <template>
   <div :class="{ 'film-card': true, highlighted }">
     <h3 class="film-title">
-      <span v-if="item.episode_id" class="episode">Episode {{ item.episode_id }}</span>
-      {{ item.title }}
+      <span v-if="item.episode_id" class="episode">EP{{ item.episode_id }}</span>
+      <span>{{ item.title }}</span>
     </h3>
 
     <div class="film-info">
@@ -61,17 +61,23 @@ function truncateCrawl(crawl) {
 
 .film-title {
   color: #ffd700;
-  font-size: 20px;
+  font-size: 14px;
   font-weight: 700;
-  margin: 0 0 12px 0;
+  margin: 0 0 8px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .episode {
-  display: block;
-  font-size: 12px;
-  letter-spacing: 1px;
+  background: #222;
   color: #aaa;
-  margin-bottom: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .film-info {

@@ -1,8 +1,9 @@
 <template>
   <div :class="{ 'species-card': true, highlighted }">
-    <h3 class="species-title">{{ item.name }}</h3>
-
-    <div class="badge">{{ item.classification || 'Unknown' }}</div>
+    <div class="header">
+      <h3 class="species-title">{{ item.name }}</h3>
+      <div class="badge">{{ item.classification || 'Unknown' }}</div>
+    </div>
 
     <div class="species-info">
       <div v-if="item.designation" class="info-row">
@@ -63,11 +64,19 @@ defineProps({
   border-left: 3px solid #ffd700;
 }
 
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 .species-title {
   color: #ffd700;
-  font-size: 20px;
+  font-size: 14px;
   font-weight: 700;
-  margin: 0 0 8px 0;
+  margin: 0;
 }
 
 .badge {
@@ -76,8 +85,9 @@ defineProps({
   color: #aaa;
   padding: 4px 8px;
   border-radius: 4px;
-  font-size: 12px;
-  margin-bottom: 12px;
+  font-size: 11px;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .species-info {

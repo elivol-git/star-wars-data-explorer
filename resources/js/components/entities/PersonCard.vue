@@ -2,7 +2,7 @@
   <div :class="{ 'person-card': true, highlighted }">
     <h3 class="person-title">{{ item.name }}</h3>
 
-    <div class="quick-stats">
+    <div class="quick-stats" v-if="item.birth_year || item.gender">
       <span v-if="item.birth_year" class="stat">
         <span class="stat-label">Born</span>
         <span class="stat-value">{{ item.birth_year }}</span>
@@ -63,9 +63,9 @@ defineProps({
 
 .person-title {
   color: #ffd700;
-  font-size: 20px;
+  font-size: 14px;
   font-weight: 700;
-  margin: 0 0 12px 0;
+  margin: 0 0 8px 0;
 }
 
 .quick-stats {
