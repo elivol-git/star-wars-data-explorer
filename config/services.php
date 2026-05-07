@@ -37,5 +37,8 @@ return [
         'model' => env('HF_MODEL'),
     ],
 
+    'pexels' => [
+        'key' => env('PEXELS_API_KEY'),
+    ],
 
 ];
