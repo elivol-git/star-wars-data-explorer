@@ -2,6 +2,7 @@
 set -euo pipefail
 
 REMOTE_PATH="${REMOTE_PATH:-/home/ubuntu/starwars}"
+DB_PASSWORD="${DB_PASSWORD:-}"
 
 echo "=========================================="
 echo "🚀 Starting deployment on server"
