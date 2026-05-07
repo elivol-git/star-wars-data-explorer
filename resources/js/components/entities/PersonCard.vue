@@ -1,5 +1,9 @@
 <template>
+  <ImageModal :show="showImageModal" :imageUrl="item.image_url" :entityName="item.name" @close="showImageModal = false" />
   <div :class="{ 'person-card': true, highlighted }">
+    <div v-if="item.image_url" class="entity-image-thumbnail" @click="showImageModal = true">
+      <img :src="item.image_url" :alt="item.name" />
+    </div>
     <h3 class="person-title">{{ item.name }}</h3>
 
     <div class="quick-stats" v-if="item.birth_year || item.gender">
@@ -42,19 +46,49 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import ImageModal from '../ImageModal.vue'
+
 defineProps({
   item: Object,
   highlight: Boolean,
 })
+
+const showImageModal = ref(false)
 </script>
 
 <style scoped>
 .person-card {
+  position: relative;
   background: #111;
   border: 1px solid #333;
   border-radius: 10px;
   padding: 20px;
   transition: border-color 0.2s;
+}
+
+.entity-image-thumbnail {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.entity-image-thumbnail:hover {
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+.entity-image-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .person-card.highlighted {

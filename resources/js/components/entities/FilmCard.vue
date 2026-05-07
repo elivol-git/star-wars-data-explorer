@@ -1,5 +1,9 @@
 <template>
+  <ImageModal :show="showImageModal" :imageUrl="item.image_url" :entityName="item.title" @close="showImageModal = false" />
   <div :class="{ 'film-card': true, highlighted }">
+    <div v-if="item.image_url" class="entity-image-thumbnail" @click="showImageModal = true">
+      <img :src="item.image_url" :alt="item.title" />
+    </div>
     <h3 class="film-title">
       <span v-if="item.episode_id" class="episode">EP{{ item.episode_id }}</span>
       <span>{{ item.title }}</span>
@@ -28,10 +32,15 @@
 </template>
 
 <script setup>
+import { ref } from 'vue'
+import ImageModal from '../ImageModal.vue'
+
 defineProps({
   item: Object,
   highlight: Boolean,
 })
+
+const showImageModal = ref(false)
 
 function formatDate(dateStr) {
   const date = new Date(dateStr)
@@ -48,11 +57,36 @@ function truncateCrawl(crawl) {
 
 <style scoped>
 .film-card {
+  position: relative;
   background: #111;
   border: 1px solid #333;
   border-radius: 10px;
   padding: 20px;
   transition: border-color 0.2s;
+}
+
+.entity-image-thumbnail {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 60px;
+  height: 60px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+
+.entity-image-thumbnail:hover {
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+.entity-image-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .film-card.highlighted {
