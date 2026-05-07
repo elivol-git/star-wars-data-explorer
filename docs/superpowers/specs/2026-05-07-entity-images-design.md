@@ -40,9 +40,11 @@ CREATE TABLE entity_images (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     
     UNIQUE KEY unique_entity_image (entity_type, entity_id),
-    FOREIGN KEY (entity_id) REFERENCES entities(id) ON DELETE CASCADE
+    INDEX idx_entity_type_id (entity_type, entity_id)
 );
 ```
+
+**Note:** No foreign key constraint (entities are in separate tables per type). Cleanup handled via job on entity deletion.
 
 Index: `entity_type`, `entity_id` for fast lookups.
 
@@ -166,34 +168,31 @@ Features:
 - Image container with padding
 - Mobile responsive (full-width on small screens)
 
-### Lazy Loading
+### Data Binding
 
-Images lazy-loaded on demand (click thumbnail → fetch full URL if not cached):
-- Vue component checks if `entity.image_url` exists
-- If missing, fetch via `/api/entities/{type}/{id}/image` endpoint
-- Cache result in component state for session
+Entity card components receive entity object from parent (via API or prop):
+- Existing API endpoints return entity data (Person, Planet, Film, etc.)
+- Add `image_url` from `entity_images` table via eager loading or separate query
+- Vue component displays thumbnail if `entity.image_url` exists
+- Click opens modal with same URL
 
 ---
 
-## API Endpoint
+## API Changes
 
-### GET `/api/entities/{type}/{id}/image`
-
-**Response:**
+Existing entity endpoints (GET `/planets/{id}`, `/people/{id}`, etc.) should include `image_url`:
+- Add relationship in entity Models: `hasOne(EntityImage)`
+- Load via eager loading: `with('image')`
+- Append `image_url` to response (either via relationship or computed property)
+- Example response for `/people/{id}`:
 ```json
 {
+  "id": 1,
+  "name": "Luke Skywalker",
   "image_url": "https://images.pexels.com/...",
-  "source": "pexels",
-  "entity_name": "Luke Skywalker",
-  "cached": true
+  ...
 }
 ```
-
-**Logic:**
-- Query `entity_images` table
-- If found, return cached URL
-- If not found or missing URL, trigger `FetchEntityImages` job and return null (frontend shows nothing)
-- Cache-Control header: `max-age=3600` (1 hour)
 
 ---
 
