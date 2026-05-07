@@ -23,7 +23,7 @@ services:
     depends_on:
       - redis
     healthcheck:
-      test: ["CMD", "sh", "-c", "netstat -tlnp 2>/dev/null | grep ':9000.*php-fpm'"]
+      test: ["CMD", "sh", "-c", "timeout 2 bash -c 'cat < /dev/null > /dev/tcp/localhost/9000'"]
       interval: 10s
       timeout: 5s
       retries: 5
