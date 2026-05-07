@@ -9,6 +9,10 @@ SECRET_ARN="${SECRET_ARN:-arn:aws:secretsmanager:eu-north-1:078238935621:secret:
 
 cd "$LOCAL_PATH"
 
+echo "=========================================="
+echo "📤 Syncing code to EC2..."
+echo "=========================================="
+
 rsync -avz \
   --exclude=node_modules \
   --exclude=vendor \
@@ -27,8 +31,12 @@ rsync -avz \
   --exclude=public/build \
   -e "ssh -i $SSH_KEY" ./ "$EC2_USER_HOST:$REMOTE_PATH"
 
+echo "✅ Sync complete"
+
 if [ -z "${DB_PASSWORD:-}" ]; then
   if command -v aws >/dev/null 2>&1; then
+    echo ""
+    echo "🔑 Fetching DB_PASSWORD from AWS Secrets Manager..."
     AWS_RESPONSE="$(aws secretsmanager get-secret-value \
       --secret-id "$SECRET_ARN" \
       --region eu-north-1 2>&1)"
@@ -57,6 +65,7 @@ except Exception as e:
       echo "ERROR: Failed to extract password from AWS response."
       exit 1
     fi
+    echo "✅ Password fetched"
   else
     echo "ERROR: DB_PASSWORD is not set and aws CLI is unavailable."
     echo "Set DB_PASSWORD in your shell for this run, or install aws CLI v2."
@@ -64,30 +73,34 @@ except Exception as e:
   fi
 fi
 
+echo ""
+echo "=========================================="
+echo "🚀 Running deployment on EC2..."
+echo "=========================================="
 
-ssh -i "$SSH_KEY" "$EC2_USER_HOST" DB_PASSWORD="$DB_PASSWORD" bash -s <<EOF
+ssh -i "$SSH_KEY" "$EC2_USER_HOST" DB_PASSWORD="$DB_PASSWORD" REMOTE_PATH="$REMOTE_PATH" bash -s <<'DEPLOY_SCRIPT'
 set -euo pipefail
+
 cd "$REMOTE_PATH"
 
+echo "🔧 Pre-deployment checks..."
 docker --version
 docker compose version
 
 if [ ! -f global-bundle.pem ]; then
+  echo "📥 Fetching RDS certificate..."
   curl -fsSL -o global-bundle.pem https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
 fi
 
+echo "🧪 Testing DB connectivity..."
 docker run --rm --network host -e DB_HOST=planets.cn2eau4c0ak7.eu-north-1.rds.amazonaws.com -e DB_PORT=3306 \
   php:8.3-cli sh -lc 'php -r "$h=getenv(\"DB_HOST\");$p=(int)getenv(\"DB_PORT\");$s=@fsockopen($h,$p,$e,$es,8); if($s){echo \"DB TCP OK\n\"; fclose($s);} else {fwrite(STDERR, \"DB TCP FAIL: $e $es\n\"); exit(1);} "'
 
-DB_PASSWORD="\$DB_PASSWORD" docker compose -f docker-compose.yml -f docker-compose.prod.yml down && \
-  DB_PASSWORD="\$DB_PASSWORD" docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+echo ""
+echo "📦 Running deploy-server.sh..."
+bash "$REMOTE_PATH/scripts/deploy-server.sh"
 
-docker compose -f docker-compose.yml -f docker-compose.prod.yml ps
-docker logs planets_app --tail 80
-docker logs planets_nginx --tail 80
+DEPLOY_SCRIPT
 
-docker exec planets_app php artisan config:clear
-docker exec planets_app php artisan cache:clear
-docker exec planets_app php artisan migrate --force
-docker exec planets_app php artisan swapi:sync
-EOF
+echo ""
+echo "✅ Deployment complete!"
