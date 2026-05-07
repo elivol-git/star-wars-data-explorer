@@ -18,6 +18,24 @@ class EventServiceProvider extends ServiceProvider
         Registered::class => [
             SendEmailVerificationNotification::class,
         ],
+        'eloquent.created: App\Models\Person' => [
+            'App\Listeners\DispatchImageFetch',
+        ],
+        'eloquent.created: App\Models\Planet' => [
+            'App\Listeners\DispatchImageFetch',
+        ],
+        'eloquent.created: App\Models\Film' => [
+            'App\Listeners\DispatchImageFetch',
+        ],
+        'eloquent.created: App\Models\Starship' => [
+            'App\Listeners\DispatchImageFetch',
+        ],
+        'eloquent.created: App\Models\Vehicle' => [
+            'App\Listeners\DispatchImageFetch',
+        ],
+        'eloquent.created: App\Models\Species' => [
+            'App\Listeners\DispatchImageFetch',
+        ],
     ];
 
     /**
