@@ -3,34 +3,92 @@
 namespace Tests\Unit\Services;
 
 use App\Services\ImageFetcher;
+use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
 
 class ImageFetcherTest extends TestCase
 {
-    public function test_fetch_for_entity_returns_null_if_no_results()
+    protected function setUp(): void
     {
+        parent::setUp();
+        // Set a dummy API key for tests
+        config(['services.pexels.key' => 'test-api-key']);
+    }
+
+    public function test_fetch_for_entity_returns_url_string()
+    {
+        Http::fake([
+            'api.pexels.com/*' => Http::response([
+                'photos' => [
+                    [
+                        'src' => ['original' => 'https://example.com/image.jpg']
+                    ]
+                ]
+            ], 200),
+        ]);
+
         $fetcher = new ImageFetcher();
-        $result = $fetcher->fetchForEntity('Person', 1, 'NonexistentEntity');
+        $result = $fetcher->fetchForEntity('Person', 1, 'Luke Skywalker');
+
+        $this->assertIsString($result);
+        $this->assertEquals('https://example.com/image.jpg', $result);
+    }
+
+    public function test_search_pexels_returns_null_when_no_photos()
+    {
+        Http::fake([
+            'api.pexels.com/*' => Http::response([
+                'photos' => []
+            ], 200),
+        ]);
+
+        $fetcher = new ImageFetcher();
+        $result = $fetcher->searchPexels('NonexistentEntity123XYZ');
 
         $this->assertNull($result);
     }
 
-    public function test_search_pexels_returns_url_on_success()
+    public function test_search_pexels_handles_api_error()
     {
+        Http::fake([
+            'api.pexels.com/*' => Http::response([], 429), // Rate limited
+        ]);
+
         $fetcher = new ImageFetcher();
-        // Mock Pexels response
         $result = $fetcher->searchPexels('Luke Skywalker');
 
-        // Should return URL string or null (depends on API)
-        $this->assertTrue(is_string($result) || is_null($result));
+        $this->assertNull($result);
     }
 
-    public function test_fetch_for_entity_calls_search_pexels()
+    public function test_returns_null_without_api_key()
     {
-        $fetcher = new ImageFetcher();
-        $result = $fetcher->fetchForEntity('Person', 1, 'Luke Skywalker');
+        // Override the setUp() configuration for this specific test
+        config(['services.pexels.key' => null]);
 
-        // Result should be string URL or null
-        $this->assertTrue(is_string($result) || is_null($result));
+        $fetcher = new ImageFetcher();
+        $result = $fetcher->searchPexels('Luke Skywalker');
+
+        $this->assertNull($result);
+    }
+
+    public function test_extracts_image_url_correctly()
+    {
+        Http::fake([
+            'api.pexels.com/*' => Http::response([
+                'photos' => [
+                    [
+                        'src' => [
+                            'original' => 'https://images.pexels.com/original.jpg',
+                            'large' => 'https://images.pexels.com/large.jpg',
+                        ]
+                    ]
+                ]
+            ], 200),
+        ]);
+
+        $fetcher = new ImageFetcher();
+        $result = $fetcher->searchPexels('Tatooine');
+
+        $this->assertEquals('https://images.pexels.com/original.jpg', $result);
     }
 }
