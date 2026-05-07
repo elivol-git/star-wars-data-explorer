@@ -98,7 +98,7 @@ docker run --rm --network host -e DB_HOST=planets.cn2eau4c0ak7.eu-north-1.rds.am
 
 echo ""
 echo "📦 Running deploy-server.sh..."
-bash "$REMOTE_PATH/scripts/deploy-server.sh"
+DB_PASSWORD="$DB_PASSWORD" bash "$REMOTE_PATH/scripts/deploy-server.sh"
 
 DEPLOY_SCRIPT
 

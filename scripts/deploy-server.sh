@@ -28,7 +28,7 @@ echo ""
 echo "=========================================="
 echo "🔨 Building and starting containers..."
 echo "=========================================="
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+DB_PASSWORD="${DB_PASSWORD}" docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 
 echo ""
 echo "⏳ Waiting for app to be healthy (this can take 90+ seconds)..."
