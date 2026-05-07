@@ -74,21 +74,42 @@ class ImageFetcher {
 - Free tier: 200 requests/hour, no image attribution required in UI
 - Retry logic: 3 attempts with exponential backoff on network errors
 
-### FetchEntityImages Job
+### Batch Job: Seed All Entity Images
+
+**Location:** `app/Console/Commands/ScrapeEntityImages.php`
+
+Command run manually or scheduled:
+- Iterates all entity types (Person, Planet, Film, Starship, Vehicle, Species)
+- Fetches each entity from DB
+- For each entity, calls `ImageFetcher::fetchForEntity()`
+- Creates `entity_images` record with result
+- Logs progress and errors
+- Respects Pexels API rate limits (200/hour)
+
+**Usage:**
+```bash
+php artisan scrape:entity-images
+```
+
+**Rate limiting:**
+- Job dispatches with delay between requests to stay under 200 req/hour
+- If rate limit hit, waits and retries
+
+### Ongoing Job: New Entity Images
 
 **Location:** `app/Jobs/FetchEntityImages.php`
 
-Dispatched when entity is created or updated:
+Dispatched when entity is created:
 - Input: `$entityType`, `$entityId`, `$entityData` (name, etc.)
 - Calls `ImageFetcher::fetchForEntity()`
-- Creates/updates `entity_images` record with result
+- Creates `entity_images` record with result
 - Logs failures without throwing (non-blocking)
 
 ### Event Listener
 
 **Location:** `app/Listeners/DispatchImageFetch.php`
 
-Listen to entity creation/update events:
+Listen to entity creation events:
 - Models: Person, Planet, Film, Starship, Vehicle, Species
 - Dispatch `FetchEntityImages` job
 
