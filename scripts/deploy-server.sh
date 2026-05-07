@@ -3,11 +3,46 @@ set -euo pipefail
 
 REMOTE_PATH="${REMOTE_PATH:-/home/ubuntu/starwars}"
 DB_PASSWORD="${DB_PASSWORD:-}"
+SECRET_ARN="${SECRET_ARN:-arn:aws:secretsmanager:eu-north-1:078238935621:secret:rds!db-7e5ad50b-88ae-4554-ad3e-f6dbe758b9d0-QGTzsj}"
 
 echo "=========================================="
 echo "🚀 Starting deployment on server"
 echo "=========================================="
 cd "$REMOTE_PATH"
+
+# Fetch DB password if not already set
+if [ -z "$DB_PASSWORD" ]; then
+  echo "🔑 Fetching DB_PASSWORD from AWS Secrets Manager..."
+  AWS_RESPONSE="$(aws secretsmanager get-secret-value \
+    --secret-id "$SECRET_ARN" \
+    --region eu-north-1 2>&1)"
+
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to fetch secret from Secrets Manager"
+    exit 1
+  fi
+
+  DB_PASSWORD="$(echo "$AWS_RESPONSE" | python3 -c '
+import json, sys
+try:
+    response = json.load(sys.stdin)
+    secret_string = json.loads(response.get("SecretString", "{}"))
+    password = secret_string.get("password", "")
+    if not password:
+        print("ERROR: password field not found", file=sys.stderr)
+        sys.exit(1)
+    print(password)
+except Exception as e:
+    print(f"ERROR: {e}", file=sys.stderr)
+    sys.exit(1)
+')"
+
+  if [ $? -ne 0 ] || [ -z "$DB_PASSWORD" ]; then
+    echo "ERROR: Failed to extract password from AWS response."
+    exit 1
+  fi
+  echo "✅ Password fetched"
+fi
 
 # Show what we're deploying
 echo ""
