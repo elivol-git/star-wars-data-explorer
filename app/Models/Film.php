@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\EntityImage;
 use App\Models\Pivots\PivotTables;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +13,7 @@ class Film extends Model
 {
     use HasFactory;
     protected $table = 'films';
+    protected $appends = ['image_url'];
     protected $fillable = [
         'title',
         'episode_id',
@@ -30,6 +32,12 @@ class Film extends Model
         'created' => 'datetime',
         'edited' => 'datetime',
     ];
+
+    public function image()
+    {
+        return $this->hasOne(EntityImage::class, 'entity_id')
+            ->where('entity_type', 'Film');
+    }
 
     public function planets(): BelongsToMany
     {
@@ -62,6 +70,11 @@ class Film extends Model
                 ? \Carbon\Carbon::parse($value)->toDateString()
                 : null
         );
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image?->image_url;
     }
 
     public function searchableColumns(): array

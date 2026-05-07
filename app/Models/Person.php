@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\EntityImage;
 use App\Models\Pivots\PivotTables;
 use App\Models\Traits\NormalizeNumbers;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -38,12 +39,20 @@ class Person extends Model
         'edited' => 'datetime',
     ];
 
+    protected $appends = ['image_url'];
+
     public function numeric(): array
     {
         return [
             'height',
             'mass',
         ];
+    }
+
+    public function image()
+    {
+        return $this->hasOne(EntityImage::class, 'entity_id')
+            ->where('entity_type', 'Person');
     }
 
     public function homeworld(): BelongsTo
@@ -78,6 +87,11 @@ class Person extends Model
     public function starships(): BelongsToMany
     {
         return $this->belongsToMany(Starship::class, PivotTables::PERSON_STARSHIP);
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image?->image_url;
     }
 
     public function searchableColumns(): array

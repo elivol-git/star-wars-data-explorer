@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\EntityImage;
 use App\Models\Pivots\PivotTables;
 use App\Models\Traits\NormalizeNumbers;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,6 +13,7 @@ class Planet extends Model
 {
     use HasFactory, NormalizeNumbers;
     protected $table = 'planets';
+    protected $appends = ['image_url'];
     protected $fillable = [
         'name',
         'rotation_period',
@@ -48,6 +50,12 @@ class Planet extends Model
         ];
     }
 
+    public function image()
+    {
+        return $this->hasOne(EntityImage::class, 'entity_id')
+            ->where('entity_type', 'Planet');
+    }
+
     public function films(): BelongsToMany
     {
         return $this->belongsToMany(Film::class, PivotTables::FILM_PLANET);
@@ -70,6 +78,11 @@ class Planet extends Model
             'people.vehicles',
             'people.species',
         ];
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image?->image_url;
     }
 
     public function searchableColumns(): array

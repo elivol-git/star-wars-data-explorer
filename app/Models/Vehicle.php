@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\EntityImage;
 use App\Models\Pivots\PivotTables;
 use App\Models\Traits\NormalizeNumbers;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,6 +15,7 @@ class Vehicle extends Model
 
     protected $table = 'vehicles';
     public $timestamps = false;
+    protected $appends = ['image_url'];
 
     protected $fillable = [
         'name',
@@ -49,6 +51,12 @@ class Vehicle extends Model
         ];
     }
 
+    public function image()
+    {
+        return $this->hasOne(EntityImage::class, 'entity_id')
+            ->where('entity_type', 'Vehicle');
+    }
+
     public function films(): BelongsToMany
     {
         return $this->belongsToMany(Film::class, PivotTables::FILM_VEHICLE, 'vehicle_id', 'film_id');
@@ -57,6 +65,11 @@ class Vehicle extends Model
     public function pilots(): BelongsToMany
     {
         return $this->belongsToMany(Person::class, PivotTables::PERSON_VEHICLE, 'vehicle_id', 'person_id');
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image?->image_url;
     }
 
     public function searchableColumns(): array

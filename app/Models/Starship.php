@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\EntityImage;
 use App\Models\Pivots\PivotTables;
 use App\Models\Traits\NormalizeNumbers;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -14,6 +15,7 @@ class Starship extends Model
 
     protected $table = 'starships';
     public $timestamps = false;
+    protected $appends = ['image_url'];
 
     protected $fillable = [
         'name',
@@ -53,6 +55,12 @@ class Starship extends Model
         ];
     }
 
+    public function image()
+    {
+        return $this->hasOne(EntityImage::class, 'entity_id')
+            ->where('entity_type', 'Starship');
+    }
+
     public function films(): BelongsToMany
     {
         return $this->belongsToMany(Film::class, PivotTables::FILM_STARSHIP, 'starship_id', 'film_id');
@@ -61,6 +69,11 @@ class Starship extends Model
     public function pilots(): BelongsToMany
     {
         return $this->belongsToMany(Person::class, PivotTables::PERSON_STARSHIP, 'starship_id', 'person_id');
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->image?->image_url;
     }
 
     public function searchableColumns(): array
