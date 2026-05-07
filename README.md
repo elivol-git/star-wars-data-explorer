@@ -301,24 +301,66 @@ sudo systemctl start redis
 ```
 
 ---
-### Dev Docker run:
+## 🐳 Docker Deployment
+
+### Development Docker
+
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
-
 ```
 
-### Production Docker run:
+---
+
+### Production Deployment (AWS EC2)
+
+Deployment to AWS EC2 uses two scripts:
+
+#### 1. **Local Machine** - Sync code to server
+
 ```bash
-cd /mnt/c/projects/star-wars-data-explorer
-rsync -avz --exclude=node_modules --exclude=.git --exclude=.claude --exclude=.idea --exclude=storage/ --exclude=docker/dev --exclude=docker/ssl --exclude=docker/mysql --exclude=bootstrap/cache --exclude=vendor --exclude=.phpunit.result.cache --exclude=.npm --exclude=public/build -e "ssh -i ~/.ssh/aws-starwars.pem" ./ ubuntu@16.171.145.213:/home/ubuntu/starwars  
-ssh -t -i ~/.ssh/aws-starwars.pem ubuntu@16.171.145.213 'cd ~/starwars && exec bash'
-docker compose -f docker-compose.yml -f docker-compose.prod.yml down                                                                                                                                                              
-DB_PASSWORD=$(aws secretsmanager get-secret-value --secret-id 'arn:aws:secretsmanager:eu-north-1:078238935621:secret:rds!db-7e5ad50b-88ae-4554-ad3e-f6dbe758b9d0-QGTzsj' --region eu-north-1 --query SecretString --output text |
-  jq -r '.password')                                                                                                                                                                                                                
-DB_PASSWORD="$DB_PASSWORD" docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
-  
+./scripts/deploy-prod-ec2.sh
 ```
+
+This script:
+- Syncs code via rsync (excludes node_modules, .git, storage/, public/hot, etc.)
+- Opens SSH session to EC2 instance for manual deployment trigger
+
+Environment variables (optional):
+```bash
+EC2_IP=your.ip.address.here ./scripts/deploy-prod-ec2.sh
+EC2_USER=ubuntu ./scripts/deploy-prod-ec2.sh
+SSH_KEY=$HOME/.ssh/your-key.pem ./scripts/deploy-prod-ec2.sh
+```
+
+#### 2. **On EC2 Server** - Run deployment
+
+Once SSH'd into the server:
+
+```bash
+cd ~/starwars && bash scripts/deploy-server.sh
+```
+
+This script:
+- Fetches DB password from AWS Secrets Manager
+- Stops old containers
+- Rebuilds and starts containers with `docker compose up -d --build`
+- Waits for app to become healthy
+- Displays container logs for debugging
+
+---
+
+### Full Production Workflow
+
+```bash
+# Local machine
+./scripts/deploy-prod-ec2.sh
+
+# On server (after SSH opens)
+bash scripts/deploy-server.sh
+```
+
+That's it. DB password is fetched automatically from AWS Secrets Manager.
 
 ## 📜 License
 
