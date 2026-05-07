@@ -11,8 +11,12 @@ cd "$REMOTE_PATH"
 # Show what we're deploying
 echo ""
 echo "📍 Location: $REMOTE_PATH"
-echo "📝 Recent git commits:"
-git log --oneline -3
+if [ -d .git ]; then
+  echo "📝 Recent git commits:"
+  git log --oneline -3
+else
+  echo "⚠️  No .git directory (code synced via rsync)"
+fi
 
 echo ""
 echo "=========================================="
