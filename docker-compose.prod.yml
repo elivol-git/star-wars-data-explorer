@@ -23,7 +23,7 @@ services:
     depends_on:
       - redis
     healthcheck:
-      test: ["CMD", "php-fpm-healthcheck", "--socket=/var/run/php-fpm.sock"]
+      test: ["CMD", "sh", "-c", "netstat -tlnp 2>/dev/null | grep ':9000.*php-fpm'"]
       interval: 10s
       timeout: 5s
       retries: 5
