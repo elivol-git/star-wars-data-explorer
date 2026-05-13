@@ -23,7 +23,7 @@ services:
     depends_on:
       - redis
     healthcheck:
-      test: ["CMD", "test", "-S", "/var/run/php-fpm.sock"]
+      test: ["CMD", "sh", "-c", "nc -z localhost 9000 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 5
