@@ -3,8 +3,9 @@ FROM php:8.3-fpm
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
 RUN apt-get update && apt-get install -y \
-    git unzip curl libzip-dev zip nginx supervisor awscli mariadb-client nodejs npm procps \
-    && docker-php-ext-install pdo_mysql zip pcntl \
+    git unzip curl libzip-dev zip nginx supervisor awscli mariadb-client nodejs npm procps libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install pdo_mysql zip pcntl gd \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && curl -fsSL -o /usr/local/bin/php-fpm-healthcheck https://raw.githubusercontent.com/renatomefi/php-fpm-healthcheck/master/php-fpm-healthcheck \
