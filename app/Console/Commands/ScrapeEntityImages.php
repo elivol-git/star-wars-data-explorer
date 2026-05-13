@@ -40,7 +40,8 @@ class ScrapeEntityImages extends Command
             $this->info("Processing $count $type(s)...");
 
             foreach ($query->cursor() as $entity) {
-                FetchEntityImages::dispatch($type, $entity->id, $entity->name)
+                $entityName = $entity->name ?? $entity->title ?? 'Unknown';
+                FetchEntityImages::dispatch($type, $entity->id, $entityName)
                     ->delay(now()->addMilliseconds($totalDispatched * $delay));
 
                 $totalDispatched++;

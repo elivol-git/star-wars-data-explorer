@@ -1,5 +1,9 @@
 <template>
+    <ImageModal :show="showImageModal" :imageUrl="planet.modal_image_url" :entityName="planet.name" @close="showImageModal = false" />
     <div class="planet-card">
+        <div v-if="planet.image_url" class="entity-image-thumbnail" @click="showImageModal = true">
+            <img :src="planet.image_url" :alt="planet.name" />
+        </div>
 
         <!-- TITLE -->
         <h3 class="planet-title">{{ planet.name }}</h3>
@@ -89,11 +93,13 @@
 import { ref, computed } from "vue"
 import PlanetTabs from "./PlanetTabs.vue"
 import EntityModal from "./entities/EntityModal.vue"
+import ImageModal from "./ImageModal.vue"
 
 const props = defineProps({
     planet: Object
 })
 
+const showImageModal = ref(false)
 const activeEntity = ref(null)
 const activeEntityType = ref(null)
 
@@ -169,7 +175,9 @@ const planetInfo = computed(() => {
         "residents",
         "match",
         "created_at",
-        "updated_at"
+        "updated_at",
+        "image_url",
+        "modal_image_url"
     ]
 
     return Object.fromEntries(
@@ -186,10 +194,46 @@ const planetInfo = computed(() => {
 <style scoped>
 
 .planet-card {
+    position: relative;
     background: #111;
     border: 1px solid #333;
     padding: 20px;
     border-radius: 10px;
+}
+
+.entity-image-thumbnail {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 60px;
+    height: 60px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    overflow: hidden;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.2s;
+}
+
+.entity-image-thumbnail::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 20px;
+    background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.6));
+    pointer-events: none;
+}
+
+.entity-image-thumbnail:hover {
+    opacity: 0.8;
+    transform: scale(1.05);
+}
+
+.entity-image-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .planet-title {

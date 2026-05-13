@@ -7,7 +7,6 @@
       </div>
       <div class="image-info">
         <h3>{{ entityName }}</h3>
-        <p class="source-attribution">From Pexels</p>
       </div>
     </div>
   </div>
@@ -54,7 +53,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 9999;
   animation: fadeIn 0.2s ease-in;
 }
 
@@ -93,7 +92,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1001;
+  z-index: 10000;
   transition: background 0.2s;
 }
 

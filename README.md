@@ -308,6 +308,8 @@ sudo systemctl start redis
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.dev.yml down -v
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d --build
+docker compose exec app php artisan scrape:entity-images
+sudo docker compose -f docker-compose.yml -f docker-compose.dev.yml exec app php artisan queue:work --memory=512 --max-jobs=50
 ```
 
 ---

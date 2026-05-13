@@ -13,7 +13,7 @@ class Film extends Model
 {
     use HasFactory;
     protected $table = 'films';
-    protected $appends = ['image_url'];
+    protected $appends = ['image_url', 'modal_image_url'];
     protected $fillable = [
         'title',
         'episode_id',
@@ -75,6 +75,11 @@ class Film extends Model
     public function getImageUrlAttribute()
     {
         return $this->image?->image_url;
+    }
+
+    public function getModalImageUrlAttribute()
+    {
+        return $this->image?->original_image_url;
     }
 
     public function searchableColumns(): array

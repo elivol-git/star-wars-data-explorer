@@ -262,7 +262,7 @@ const exclude = [
     'vehicles','species','starships',
     'homeworld','homeworld_id',
     'created','edited','created_at','updated_at',
-    'opening_crawl'
+    'opening_crawl','image_url','modal_image_url'
 ];
 
 const getInfo = (obj) =>

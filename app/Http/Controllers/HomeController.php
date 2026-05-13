@@ -10,12 +10,15 @@ class HomeController extends Controller
     public function index()
     {
         $planets = Planet::with([
-            'films.vehicles',
-            'films.species',
-            'films.starships',
-            'people.vehicles',
-            'people.species',
-            'people.starships',
+            'image',
+            'films.image',
+            'films.vehicles.image',
+            'films.species.image',
+            'films.starships.image',
+            'people.image',
+            'people.vehicles.image',
+            'people.species.image',
+            'people.starships.image',
         ])->paginate(12);
 
         $lastUpdated = Planet::max('updated_at');

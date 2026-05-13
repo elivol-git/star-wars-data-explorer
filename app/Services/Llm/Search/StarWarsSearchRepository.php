@@ -43,11 +43,12 @@ class StarWarsSearchRepository
                 'people:id,name'
             ],
             'popup_with' => [
-                'planets',
-                'people',
-                'species',
-                'starships',
-                'vehicles'
+                'image',
+                'planets.image',
+                'people.image',
+                'species.image',
+                'starships.image',
+                'vehicles.image'
             ]
         ],
 
@@ -56,11 +57,12 @@ class StarWarsSearchRepository
             'keywords' => ['name','gender','birth_year'],
             'search_with' => ['films:id,title'],
             'popup_with' => [
-                'films',
-                'species',
-                'starships',
-                'vehicles',
-                'homeworld'
+                'image',
+                'films.image',
+                'species.image',
+                'starships.image',
+                'vehicles.image',
+                'homeworld.image'
             ]
         ],
 
@@ -69,6 +71,7 @@ class StarWarsSearchRepository
             'keywords' => ['name','classification','language'],
             'search_with' => ['films:id,title'],
             'popup_with' => [
+                'image',
                 'films',
                 'pilots',
                 'homeworld'
@@ -79,14 +82,14 @@ class StarWarsSearchRepository
             'model' => \App\Models\Starship::class,
             'keywords' => ['name','model','manufacturer','starship_class'],
             'search_with' => ['films:id,title'],
-            'popup_with' => ['films','pilots']
+            'popup_with' => ['image','films','pilots']
         ],
 
         'vehicles' => [
             'model' => \App\Models\Vehicle::class,
             'keywords' => ['name','model','manufacturer','vehicle_class'],
             'search_with' => ['films:id,title'],
-            'popup_with' => ['films','pilots']
+            'popup_with' => ['image','films','pilots']
         ],
     ];
 

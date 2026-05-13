@@ -1,11 +1,18 @@
 <template>
     <transition name="fade">
+        <ImageModal v-if="entity && showImageModal" :show="showImageModal" :imageUrl="entity.modal_image_url" :entityName="entity.name || entity.title" @close="showImageModal = false" />
+    </transition>
+    <transition name="fade">
         <div
             v-if="entity"
             class="modal-window entity-tooltip"
             :style="style"
         >
             <button class="modal-close" @click="$emit('close')">×</button>
+
+            <div v-if="entity.modal_image_url" class="tooltip-image" @click="showImageModal = true">
+                <img :src="entity.modal_image_url" :alt="entity.name || entity.title" />
+            </div>
 
             <h4 class="planet-title">
                 {{ entity.name || entity.title }}
@@ -30,7 +37,8 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
+import ImageModal from '../ImageModal.vue';
 
 const isMobile = computed(() =>
     window.matchMedia('(max-width: 768px)').matches
@@ -42,13 +50,15 @@ const props = defineProps({
     y: Number
 });
 
+const showImageModal = ref(false);
+
 const exclude = [
     'id','url',
     'films','people','residents',
     'vehicles','species','starships',
     'homeworld','homeworld_id',
     'created','edited','created_at','updated_at',
-    'opening_crawl'
+    'opening_crawl','image_url','modal_image_url'
 ];
 
 const info = computed(() =>
@@ -88,3 +98,43 @@ const style = computed(() => {
 const format = (k) =>
     k.replace(/_/g,' ').toUpperCase();
 </script>
+
+<style scoped>
+.entity-tooltip {
+  position: relative;
+}
+
+.tooltip-image {
+  position: relative;
+  width: 100%;
+  height: 150px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  overflow: hidden;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+  margin-bottom: 12px;
+}
+
+.tooltip-image:hover {
+  opacity: 0.8;
+  transform: scale(1.05);
+}
+
+.tooltip-image::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 12px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.6));
+  pointer-events: none;
+}
+
+.tooltip-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+</style>

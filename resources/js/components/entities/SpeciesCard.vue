@@ -1,6 +1,6 @@
 <template>
-  <ImageModal :show="showImageModal" :imageUrl="item.image_url" :entityName="item.name" @close="showImageModal = false" />
-  <div :class="{ 'species-card': true, highlighted }">
+  <ImageModal :show="showImageModal" :imageUrl="item.modal_image_url" :entityName="item.name" @close="showImageModal = false" />
+  <div :class="{ 'species-card': true, highlighted: highlight }">
     <div v-if="item.image_url" class="entity-image-thumbnail" @click="showImageModal = true">
       <img :src="item.image_url" :alt="item.name" />
     </div>
@@ -72,8 +72,8 @@ const showImageModal = ref(false)
 
 .entity-image-thumbnail {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 0;
+  right: 0;
   width: 60px;
   height: 60px;
   border-radius: 6px;
@@ -81,6 +81,17 @@ const showImageModal = ref(false)
   overflow: hidden;
   cursor: pointer;
   transition: opacity 0.2s, transform 0.2s;
+}
+
+.entity-image-thumbnail::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.6));
+  pointer-events: none;
 }
 
 .entity-image-thumbnail:hover {

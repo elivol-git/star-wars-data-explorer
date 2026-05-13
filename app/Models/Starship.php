@@ -15,7 +15,7 @@ class Starship extends Model
 
     protected $table = 'starships';
     public $timestamps = false;
-    protected $appends = ['image_url'];
+    protected $appends = ['image_url', 'modal_image_url'];
 
     protected $fillable = [
         'name',
@@ -74,6 +74,11 @@ class Starship extends Model
     public function getImageUrlAttribute()
     {
         return $this->image?->image_url;
+    }
+
+    public function getModalImageUrlAttribute()
+    {
+        return $this->image?->original_image_url;
     }
 
     public function searchableColumns(): array
