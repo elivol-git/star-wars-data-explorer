@@ -31,6 +31,7 @@ rsync -avz \
   --exclude=docker/mysql \
   --exclude=public/build \
   --exclude=public/hot \
+  --exclude=public/images/entities \
   -e "ssh -i $SSH_KEY" ./ "$EC2_USER_HOST:$REMOTE_PATH"
 
 echo "✅ Sync complete"
