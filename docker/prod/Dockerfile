@@ -26,7 +26,7 @@ RUN npm ci && APP_ENV=production NODE_ENV=production npm run build
 RUN mkdir -p storage bootstrap/cache \
     && chown -R www-data:www-data storage bootstrap/cache
 
-COPY docker/prod/custom.ini /usr/local/etc/php/conf.d/custom.ini
+COPY docker/prod/php/custom.ini /usr/local/etc/php/conf.d/custom.ini
 COPY docker/prod/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/prod/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 COPY docker/prod/entrypoint.sh /entrypoint.sh
