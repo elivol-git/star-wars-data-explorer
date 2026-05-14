@@ -104,11 +104,30 @@ const activeEntity = ref(null)
 const activeEntityType = ref(null)
 
 const openEntity = (entity, type) => {
-    activeEntity.value = entity
+    // Use full entity data from planet arrays if available
+    let resolvedEntity = entity
+    if (entity?.id) {
+        const typeMap = {
+            'people': props.planet?.people,
+            'vehicles': props.planet?.vehicles,
+            'starships': props.planet?.starships,
+            'species': props.planet?.species,
+            'films': props.planet?.films,
+        }
+        const entityArray = type && typeMap[type]
+        if (entityArray) {
+            const full = entityArray.find(e => e.id === entity.id)
+            if (full) {
+                resolvedEntity = full
+            }
+        }
+    }
+
+    activeEntity.value = resolvedEntity
     if (type) {
         activeEntityType.value = type
     } else {
-        activeEntityType.value = detectEntityType(entity)
+        activeEntityType.value = detectEntityType(resolvedEntity)
     }
 }
 
