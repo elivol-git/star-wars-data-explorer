@@ -3,7 +3,7 @@ set -euo pipefail
 
 REMOTE_PATH="${REMOTE_PATH:-/home/ubuntu/starwars}"
 DB_PASSWORD="${DB_PASSWORD:-}"
-SECRET_ARN="${SECRET_ARN:-arn:aws:secretsmanager:eu-north-1:078238935621:secret:rds!db-7e5ad50b-88ae-4554-ad3e-f6dbe758b9d0-QGTzsj}"
+SECRET_ARN="${SECRET_ARN:-arn:aws:secretsmanager:eu-north-1:911526870556:secret:rds!db-965eaa34-cc8d-465b-a67e-af924e1aab1f-cFymat}"
 
 echo "=========================================="
 echo "🚀 Starting deployment on server"
@@ -13,16 +13,20 @@ cd "$REMOTE_PATH"
 # Fetch DB password if not already set
 if [ -z "$DB_PASSWORD" ]; then
   echo "🔑 Fetching DB_PASSWORD from AWS Secrets Manager..."
-  AWS_RESPONSE="$(aws secretsmanager get-secret-value \
-    --secret-id "$SECRET_ARN" \
-    --region eu-north-1 2>&1)"
-
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to fetch secret from Secrets Manager"
+  if ! command -v aws >/dev/null 2>&1; then
+    echo "ERROR: aws CLI not installed on this server"
     exit 1
   fi
 
-  DB_PASSWORD="$(echo "$AWS_RESPONSE" | python3 -c '
+  if ! AWS_RESPONSE="$(aws secretsmanager get-secret-value \
+    --secret-id "$SECRET_ARN" \
+    --region eu-north-1 2>&1)"; then
+    echo "ERROR: Failed to fetch secret from Secrets Manager:"
+    echo "$AWS_RESPONSE"
+    exit 1
+  fi
+
+  if ! DB_PASSWORD="$(echo "$AWS_RESPONSE" | python3 -c '
 import json, sys
 try:
     response = json.load(sys.stdin)
@@ -35,9 +39,12 @@ try:
 except Exception as e:
     print(f"ERROR: {e}", file=sys.stderr)
     sys.exit(1)
-')"
+')"; then
+    echo "ERROR: Failed to extract password from AWS response."
+    exit 1
+  fi
 
-  if [ $? -ne 0 ] || [ -z "$DB_PASSWORD" ]; then
+  if [ -z "$DB_PASSWORD" ]; then
     echo "ERROR: Failed to extract password from AWS response."
     exit 1
   fi
@@ -87,6 +94,11 @@ done
 if [ $ELAPSED -ge $MAX_WAIT ]; then
   echo "⚠️  App didn't become healthy in time. Checking logs..."
 fi
+
+echo ""
+echo "🧹 Pruning unused Docker images and build cache..."
+docker image prune -af || true
+docker builder prune -f --keep-storage 500MB || true
 
 echo ""
 echo "=========================================="
