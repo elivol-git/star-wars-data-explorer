@@ -3,7 +3,7 @@ set -euo pipefail
 
 LOCAL_PATH="${LOCAL_PATH:-/mnt/c/projects/star-wars-data-explorer}"
 SSH_KEY="${SSH_KEY:-$HOME/.ssh/aws-starwars.pem}"
-EC2_IP="${EC2_IP:-16.171.145.213}"
+EC2_IP="${EC2_IP:-13.60.203.152}"
 EC2_USER="${EC2_USER:-ubuntu}"
 EC2_USER_HOST="${EC2_USER}@${EC2_IP}"
 REMOTE_PATH="${REMOTE_PATH:-/home/ubuntu/starwars}"

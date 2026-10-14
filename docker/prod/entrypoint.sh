@@ -23,11 +23,11 @@ chmod -R 775 storage bootstrap/cache || true
 # ---------------------------
 # Fetch DB password from Secrets Manager
 # ---------------------------
-echo "DEBUG: DB_PASSWORD='$DB_PASSWORD' (length: ${#DB_PASSWORD})"
+echo "DEBUG: DB_PASSWORD length: ${#DB_PASSWORD}"
 if [ -z "$DB_PASSWORD" ]; then
     echo "Fetching DB password from Secrets Manager..."
 
-    SECRET_ARN="${SECRET_ARN:-arn:aws:secretsmanager:eu-north-1:078238935621:secret:rds!db-7e5ad50b-88ae-4554-ad3e-f6dbe758b9d0-QGTzsj}"
+    SECRET_ARN="${SECRET_ARN:-arn:aws:secretsmanager:eu-north-1:911526870556:secret:rds!db-965eaa34-cc8d-465b-a67e-af924e1aab1f-cFymat}"
     REGION="eu-north-1"
 
     echo "Calling AWS: aws secretsmanager get-secret-value --secret-id $SECRET_ARN --region $REGION"
@@ -123,6 +123,13 @@ php artisan view:cache || true
 echo "🧱 Running migrations..."
 php artisan migrate --force || true
 php artisan swapi:sync || true
+
+# ---------------------------
+# Publish public/ for nginx (shared volume)
+# ---------------------------
+if [ -d /shared-public ]; then
+    cp -a /var/www/public/. /shared-public/
+fi
 
 echo "🎯 Starting PHP-FPM..."
 
