@@ -2,7 +2,7 @@ FROM php:8.3-fpm
 
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
 
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     git unzip curl libzip-dev zip nginx supervisor awscli nodejs npm procps libfreetype6-dev libjpeg62-turbo-dev libpng-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install pdo_mysql zip pcntl gd \
@@ -19,12 +19,13 @@ COPY . .
 
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
+RUN mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache
+
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 RUN npm ci && APP_ENV=production NODE_ENV=production npm run build
 
-RUN mkdir -p storage bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache
+RUN chown -R www-data:www-data storage bootstrap/cache
 
 COPY docker/prod/php/custom.ini /usr/local/etc/php/conf.d/custom.ini
 COPY docker/prod/nginx.conf /etc/nginx/conf.d/default.conf
