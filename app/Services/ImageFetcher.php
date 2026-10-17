@@ -46,12 +46,18 @@ class ImageFetcher
                 'per_page' => 1,
             ]);
 
+            if ($response->status() === 429) {
+                throw new PexelsRateLimited('Pexels rate limit hit');
+            }
+
             if ($response->successful() && $response['photos']) {
                 $photo = $response['photos'][0];
                 return $photo['src']['original'] ?? null;
             }
 
             return null;
+        } catch (PexelsRateLimited $e) {
+            throw $e;
         } catch (\Exception $e) {
             logger('Pexels API error: ' . $e->getMessage());
             return null;
