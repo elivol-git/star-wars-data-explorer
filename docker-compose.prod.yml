@@ -1,6 +1,7 @@
 volumes:
   public_assets:
   storage_data:
+  entity_images:
 
 services:
   app:
@@ -17,9 +18,10 @@ services:
       - AWS_ACCESS_KEY_ID
       - AWS_SECRET_ACCESS_KEY
       - AWS_SESSION_TOKEN
-    volumes:
+    volumes: !override
       - public_assets:/shared-public
       - storage_data:/var/www/storage
+      - entity_images:/var/www/public/images/entities
       - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:
       - app
@@ -38,8 +40,9 @@ services:
     ports:
       - "80:80"
       - "443:443"
-    volumes:
+    volumes: !override
       - public_assets:/var/www/public:ro
+      - entity_images:/var/www/entities:ro
       - ./docker/prod/nginx.conf:/etc/nginx/conf.d/default.conf
       - /etc/letsencrypt:/etc/letsencrypt:ro
     networks:

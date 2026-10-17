@@ -17,7 +17,8 @@ mkdir -p storage/logs \
 # ---------------------------
 # Fix permissions (VERY important in prod)
 # ---------------------------
-chown -R www-data:www-data storage bootstrap/cache || true
+mkdir -p public/images/entities
+chown -R www-data:www-data storage bootstrap/cache public/images/entities || true
 chmod -R 775 storage bootstrap/cache || true
 
 # ---------------------------
@@ -128,7 +129,8 @@ php artisan swapi:sync || true
 # Publish public/ for nginx (shared volume)
 # ---------------------------
 if [ -d /shared-public ]; then
-    cp -a /var/www/public/. /shared-public/
+    # entities live in their own volume; don't copy them into the public volume
+    (cd /var/www/public && tar cf - --exclude=./images/entities .) | tar xf - -C /shared-public
 fi
 
 echo "🎯 Starting PHP-FPM..."
