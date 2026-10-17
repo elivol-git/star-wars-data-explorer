@@ -14,7 +14,7 @@ echo "=========================================="
 echo "📤 Syncing code to EC2..."
 echo "=========================================="
 
-rsync -avz \
+rsync -avz --omit-dir-times \
   --exclude=node_modules \
   --exclude=vendor \
   --exclude=.git \
