@@ -1,3 +1,15 @@
+* text=auto
+
+*.blade.php diff=html
+*.css diff=css
+*.html diff=html
+*.md diff=markdown
+*.php diff=php
+
+/.github export-ignore
+CHANGELOG.md export-ignore
+.styleci.yml export-ignore
+
 # Shell scripts and container configs run on Linux; keep LF even on Windows checkouts
 *.sh text eol=lf
 docker/**/*.conf text eol=lf
